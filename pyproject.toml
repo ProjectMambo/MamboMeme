@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mambomeme-search"
+version = "0.1.0"
+description = "Local meme corpus indexing and search"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "python"}
+
+[tool.setuptools.packages.find]
+where = ["python"]

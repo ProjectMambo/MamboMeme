@@ -1,10 +1,10 @@
 # MamboMeme
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Status-Design-4c8bf5?style=flat-square" alt="Project status: design" />
+  <img src="https://img.shields.io/badge/Status-Phase_1_complete-2ea44f?style=flat-square" alt="Project status: Phase 1 complete" />
 </p>
 
-MamboMeme is a planned local search application for finding existing meme images and quotes. A user searches for a name, quote, topic, or description—such as `john cena`—reviews a ranked list, and chooses the item they want.
+MamboMeme is a local search application for finding existing meme images and quotes. A user searches for a name, quote, topic, or description—such as `john cena`—reviews a ranked list, and chooses the item they want.
 
 It is a **ranked multimodal search project**, not a reply generator in its first release. The ML work is retrieval: building useful representations, comparing lexical and semantic routes, ranking results, and measuring whether the desired meme is easy to find.
 
@@ -24,38 +24,30 @@ It is a **ranked multimodal search project**, not a reply generator in its first
 
 | Part | Status | Purpose |
 |---|---|---|
-| Data processing and storage | Core | Acquire permitted meme records, validate and deduplicate them, enrich searchable fields, and publish a versioned corpus. |
-| Retrieval | Core | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
-| User interface | Core | Let a user search, inspect, navigate, and select results through a Rust terminal interface. |
+| Data processing and storage | Phase 1 complete | Validate and deduplicate a cleared local fixture, preserve provenance, build fielded FTS5, and publish a versioned corpus. |
+| Retrieval | Phase 2 planned | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
+| User interface | Phase 3 planned | Let a user search, inspect, navigate, and select results through a Rust terminal interface. |
 | Context-aware suggestions | Future | Convert one message or a short chat into search cues, then reuse the same retrieval engine. |
 
 ## System at a glance
 
 ```text
-OFFLINE CORPUS BUILD
-permitted source
-    -> Rust acquisition, validation, hashing, and staging
-    -> Python OCR, annotations, and embeddings
-    -> versioned SQLite, vector, and manifest artifacts
-
-INTERACTIVE SEARCH
-query such as "john cena"
-    -> Rust TUI
-    -> long-lived Python retrieval worker
-    -> BM25 lexical search + dense semantic search
-    -> ranked meme images and quotes
-    -> user previews and selects one result
+PHASE 1  cleared local manifest -> Rust ingest -> SQLite -> Python FTS snapshot
+PHASE 2  query -> Python BM25 / measured dense experiment -> ranked results
+PHASE 3  Rust TUI -> long-lived Python worker -> preview and explicit selection
+PHASE 4  one approved external source -> the same corpus contract
+FUTURE   bounded chat context -> search cues -> the same retrieval contract
 ```
 
-The TUI and Python worker exchange versioned newline-delimited JSON over one local subprocess session. The model and index load once; Rust does not duplicate Python retrieval logic.
+The first three phases complete the local search product. Phase 4 proves repeatable real-source ingestion. The TUI and Python worker will exchange versioned newline-delimited JSON over one local subprocess session; neither exists in Phase 1.
 
-## Why hybrid search
+## Why evaluate hybrid search
 
 `john cena` should match names, template labels, tags, and OCR text through lexical search. A query such as `the wrestler you cannot see` may need semantic retrieval because the useful item need not contain the same words.
 
-- SQLite FTS5/BM25 handles exact names, quotes, tags, and rare terms.
-- Dense text retrieval handles paraphrases, concepts, and visual descriptions.
-- Rank fusion combines both candidate lists without pretending their raw scores are comparable.
+- Phase 1 builds deterministic SQLite FTS5 data; Phase 2 turns it into the BM25 baseline for exact names, quotes, tags, and rare terms.
+- A Phase 2 dense experiment will test paraphrases, concepts, and visual descriptions.
+- Rank fusion is added only for that measured comparison and does not treat raw BM25 and dense scores as comparable.
 - Image embeddings remain a measured later experiment.
 
 Semantic search stays only if the benchmark shows a meaningful gain over BM25 without harming exact-name and exact-quote search.
@@ -68,4 +60,6 @@ There is no live self-training in the first release. Official quality scores alw
 
 ## Current status
 
-MamboMeme is documentation only. The repository contains synchronized design documents, not an application, corpus, model, dependency set, licence, public API, or deployment target.
+Phase 1 is complete. The repository contains the initial SQLite migration, a cleared fixture corpus, the Rust local ingester, the deterministic Python FTS snapshot builder, and an offline cross-language check. The commands in [Testing](docs/Testing.md#phase-1-commands) pass from a clean working tree.
+
+There is no retrieval worker, dense model, TUI, external crawler, context assistant, public API, or deployment target yet. See the four substantial delivery phases in the [Roadmap](docs/Roadmap.md).

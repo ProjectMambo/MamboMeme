@@ -36,9 +36,13 @@ For `john cena`, the engine should surface assets whose title, people, template,
 
 The first three components form the first useful release. The fourth reuses them later; it is not a dependency of the search product.
 
+Delivery uses four implementation phases rather than one phase per product component: Phase 1 creates an executable local corpus, Phase 2 creates ranked retrieval and evaluation, Phase 3 creates the TUI and first release, and Phase 4 adds one approved external source. See the [Roadmap](Roadmap.md).
+
 ## Language ownership
 
-| Rust application | Python retrieval package |
+The full system keeps one owner for each responsibility:
+
+| Rust application | Python search package |
 |---|---|
 | Source acquisition, first-pass trust-boundary validation, hashing, provenance, exact deduplication, staging, terminal lifecycle, TUI state, result presentation, and optional local interaction-event capture | Resource-limited OCR and annotations, search-document construction, embeddings, FTS and dense retrieval, rank fusion, filters, evaluation, and the long-lived search worker |
 
@@ -50,10 +54,26 @@ Rust is useful for a distributable terminal program, careful handling of source 
 
 Keep one implementation of each responsibility. Measure before moving a boundary.
 
-## Offline corpus build
+## Current implementation boundary
+
+Phase 1 is complete. Its executable boundary is deliberately smaller than the full architecture:
 
 ```text
-approved API or local manifest
+cleared local JSONL manifest and static fixture assets
+    -> Rust sets an unresolved-manifest gate, validates, hashes, deduplicates, and commits one manifest transaction
+    -> successful commit clears the gate; failure blocks other manifests and publication
+    -> Python builds deterministic fielded FTS5 in a candidate snapshot
+    -> Python validates integrity and coverage, checksums artifacts, and atomically publishes active.json
+```
+
+The initial migration, cleared fixture data, Rust command, Python builder, unit tests, and offline cross-language fixture are implemented. Phase 1 accepts local PPM fixture images only; broader decoding belongs with real-source ingestion.
+
+Phase 1 performs no network requests, OCR, model inference, embedding generation, query retrieval, worker communication, or terminal rendering. Those boundaries belong to later phases and must not be inferred from the presence of their design documents.
+
+## Full offline corpus build
+
+```text
+approved API or cleared local manifest
     -> Rust fetches or reads, validates, hashes, deduplicates, and stages
     -> raw content-addressed assets + SQLite provenance rows
     -> Python performs constrained OCR and enrichment
@@ -63,7 +83,9 @@ approved API or local manifest
 
 The stages do not write concurrently. Rust completes its acquisition transaction before Python enrichment begins. The interactive search worker opens only the published snapshot and treats it as read-only.
 
-## Interactive search
+Phase 1 stops after local ingestion, deterministic FTS construction, validation, and publication. Model enrichment and embeddings are introduced only by a later phase with their own tests; remote acquisition begins only in Phase 4.
+
+## Interactive search — Phases 2 and 3
 
 ```text
 user submits query in Rust TUI
@@ -76,9 +98,9 @@ user submits query in Rust TUI
     -> user opens, copies, or selects one item
 ```
 
-The TUI starts one worker per session so the model and corpus load once. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the first release.
+Phase 2 creates the worker and headless retrieval. Phase 3 starts one worker per TUI session so the model and corpus load once. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the first release.
 
-## Online protocol
+## Online protocol — planned for Phase 2
 
 Use UTF-8 newline-delimited JSON over the worker's standard input and standard output. Standard error is diagnostic output only. Every message has `protocol_version`, `type`, and `request_id` where applicable.
 
@@ -109,6 +131,8 @@ Malformed messages, protocol mismatches, premature EOF, and timeouts become visi
 
 ## Artifact contract
 
+The table describes the full release contract. Phase 1 implements the raw-media, SQLite, migration, and published-manifest rows; vector and interaction-event artifacts arrive only in their owning phases.
+
 Rust and Python exchange durable, inspectable build artifacts:
 
 | Artifact | Owner | Consumer |
@@ -123,13 +147,13 @@ Rust and Python exchange durable, inspectable build artifacts:
 
 The manifest records schema versions, canonical content identity, SQLite runtime and compile options, exact model revision, embedding dimension, ordered-ID checksum, and artifact checksums. Corpus identity is computed from a canonical ordered export rather than SQLite page bytes or timestamps.
 
-One fixed end-to-end fixture must prove:
+The Phase 1 portion of one fixed fixture must prove ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection:
 
 ```text
 Rust fixture import
     -> expected accepted, duplicate, and quarantine outcomes
-    -> Python index build
-    -> development-only "john cena" fixture returns its expected group within the declared rank bound
+    -> Python FTS index build and atomic publication
+    -> Phase 2: development-only "john cena" fixture returns its expected group within the declared rank bound
     -> Rust protocol client receives and selects the intended stable ID
     -> a second build preserves content identity and ranking
 ```
@@ -163,45 +187,43 @@ An empty result list is a successful search outcome. Invalid input or worker fai
 ## Storage boundary
 
 ```text
-permitted raw assets and payloads    content-addressed local files
-canonical metadata and FTS           SQLite
-normalized dense vectors             NumPy matrix + ordered JSONL IDs
-active corpus                         small manifest pointer
-selection feedback                    optional local JSONL
-benchmark and reports                 versioned JSON/Markdown
+permitted raw assets and payloads    content-addressed local files      Phase 1
+canonical metadata and FTS           SQLite                            Phase 1
+active corpus                         checksummed manifest pointer       Phase 1
+normalized dense vectors             NumPy matrix + ordered JSONL IDs   Phase 2 if accepted
+benchmark and reports                 versioned JSON/Markdown            Phase 2
+selection feedback                    optional local JSONL               Phase 3
 ```
 
 Raw, canonical, and derived data are layers of one corpus, not three competing sources of truth. Derived FTS and embedding artifacts can be rebuilt. A model change produces a new manifest and never overwrites the artifacts attached to an earlier score.
 
-## Planned repository shape
+## Repository shape by phase
 
-Create paths only when their roadmap phase starts:
+Phase 1 uses this single-package shape:
 
 ```text
 README.md
 docs/
 Cargo.toml
 Cargo.lock
+rust-toolchain.toml
 migrations/
     001_initial.sql
 src/
-    main.rs                  `ingest` and `tui` entry points
-    ingest.rs                acquisition, validation, and outcomes
-    protocol.rs              typed NDJSON messages and worker process
-    tui.rs                   terminal state and rendering
+    main.rs                  `ingest` entry point
+    ingest.rs                local validation, storage, and outcomes
 pyproject.toml
 python/mambomeme_search/
     __init__.py
-    worker.py                protocol loop and search boundary
-    build_index.py           enrichment, FTS, and embeddings
-    retrieve.py              lexical, dense, fusion, and filters
-    evaluate.py              benchmark runner and Technical Score
-benchmarks/                  queries, judgements, policies, and reports
-tests/fixtures/              one cross-language fixture corpus
-data/                        ignored raw, staging, built, and feedback data
+    build_index.py           deterministic FTS build and publication
+tests/
+    fixtures/corpus/         cleared local manifest and assets
+    python/                  index and publication tests
+    test_phase1.py           offline Rust-to-Python acceptance check
+data/                        ignored working and published artifacts
 ```
 
-One Cargo package and one Python package are enough. Do not add a Cargo workspace, web service, message queue, vector service, adapter framework for one source, or empty context package.
+Phase 2 adds retrieval, evaluation, worker, benchmark, and protocol files only when that phase begins. Phase 3 adds the TUI and interaction-event files. Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
 
 ## Failure behavior
 

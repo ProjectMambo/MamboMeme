@@ -8,21 +8,30 @@ order: 20
 
 # Data pipeline
 
-The data pipeline converts permitted source material into a versioned searchable corpus. Rust owns acquisition and the first untrusted-input boundary. Python performs resource-limited OCR and ML enrichment, then builds and publishes the search artifacts.
+The data pipeline converts permitted source material into a versioned searchable corpus. Rust owns acquisition and the first untrusted-input boundary. Python owns deterministic derived-index construction, validation, and publication; model enrichment is added only when a later phase needs it.
 
 ## Pipeline
 
+Phase 1 implements the smallest complete offline path:
+
 ```text
-approved API or local manifest
-    -> Rust acquisition and parsing
-    -> raw assets + source/provenance records
-    -> canonical meme items
-    -> Python OCR, captions, tags, and embeddings
-    -> FTS index + vector matrix
-    -> validated immutable corpus snapshot
+cleared local JSONL manifest + static fixture assets
+    -> Rust unresolved-manifest gate, bounded parsing, rights checks, decode, hashing, and deduplication
+    -> content-addressed media + canonical/provenance SQLite rows
+    -> Python deterministic fielded FTS5 build
+    -> integrity, coverage, and checksum validation
+    -> atomic active.json publication
 ```
 
+Later phases add retrieval and measured embeddings, resource-limited OCR or annotation where needed, and finally one approved network source. These additions reuse the Phase 1 corpus contract rather than replace it.
+
 Only one build stage writes at a time. The retrieval worker opens the published snapshot read-only.
+
+## Implementation status
+
+Phase 1 is complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS snapshot builder, and offline acceptance checks are implemented and passing.
+
+Not implemented in Phase 1: network acquisition, OCR, generated captions, embedding matrices, ranked query retrieval, or interaction feedback.
 
 ## Source acceptance
 
@@ -61,33 +70,40 @@ Each adapter maps input into the same bounded envelope without inventing missing
 | `schema_version` | Cross-language record version. |
 | `source`, `source_item_id` | Source name and stable ID; the pair is unique. |
 | `kind` | `text` or static `image` in v1. |
-| `source_url`, `media_url` | Original page and optional media location. |
+| `source_url`, `media_url`, `asset_path` | Original page, optional provider media URL, and Phase 1 path relative to the manifest directory. |
 | `fetched_at`, `source_updated_at` | Retrieval time and optional provider revision. |
 | `raw_payload_path` | Retained payload or null when retention is forbidden. |
 | `claimed_media_type` | Optional declaration; never trusted without inspection. |
-| `title`, `source_text`, `source_tags` | Original strings preserved without search normalization. |
+| `title`, `text`, `tags` | Original title, text-item content, and source tags preserved without search normalization. |
+| `language`, `safe`, `reviewed` | Required Phase 1 language and explicit safety/review classifications. |
 | `people`, `template` | Source-provided identity metadata, including names such as John Cena. |
 | `creator`, `licence`, `permission`, `attribution` | Rights evidence required by the source policy. |
 | `retention_policy`, `redistribution_policy` | What may be stored and shown. |
 
-Unknown optional source fields remain in the retained raw payload when policy permits. The canonical mapping records whether each derived value came from the source, a model, or human review.
+Phase 1 rejects unknown manifest fields instead of silently discarding them. A later source adapter may retain additional provider fields in its bounded raw payload when policy permits. The canonical mapping records whether each derived value came from the source, a model, or human review.
 
 ## Rust trust-boundary parsing
 
-The ingester resolves every attempted item to an explicit outcome:
+### Phase 1 local boundary
+
+The local ingester resolves every attempted fixture item to an explicit outcome:
 
 1. Parse a bounded record and dispatch on `kind`; quarantine unknown kinds.
 2. Resolve local paths beneath a configured root without following an escape outside it.
-3. Allow remote requests only over `http` or `https` to source-policy allowlisted hosts.
-4. Resolve and reject private, loopback, link-local, and otherwise forbidden addresses, then connect to the validated address. Repeat after every redirect.
-5. Enforce request time, redirect, response-byte, and decoded-dimension limits. Decoder allocation limits are best-effort unless the process also has an operating-system memory limit.
-6. For images, compare HTTP metadata with magic-byte detection and a real decode. Reject unsupported or animated formats in v1.
-7. For text-only items, require bounded valid Unicode and do not run media checks.
-8. Require stable identity and all rights fields named by the source policy.
-9. Calculate a domain-separated SHA-256 digest while streaming media to a temporary file or over the original UTF-8 text.
-10. Atomically move accepted media into content-addressed storage and commit the database outcome before advancing the source cursor.
+3. Enforce record-byte and decoded-image dimension limits.
+4. For images, compare the declared type with magic-byte detection and a bounded static PPM decode; broader formats are deferred until a real source requires them.
+5. For text-only items, require bounded valid Unicode and do not run media checks.
+6. Require stable source identity and complete rights, retention, redistribution, safety, and review evidence.
+7. Calculate a domain-separated SHA-256 digest over the original UTF-8 text or media bytes.
+8. Persist the manifest-path gate, atomically place accepted media in content-addressed storage, sync every newly created directory link, and commit the complete manifest's item, provenance, outcome, and processing-run rows in one SQLite transaction.
 
-The first adapter can use one reused synchronous HTTP client. A rate-limited source does not justify an async runtime or generic adapter framework.
+No Phase 1 code accepts a URL as media input or performs a network request.
+
+### Phase 4 remote boundary
+
+The first approved external source extends the same outcome model. It must allow only `http` or `https` requests to source-policy allowlisted hosts, resolve and reject private, loopback, link-local, and otherwise forbidden addresses, connect to the validated address, and repeat validation after every redirect. It must also enforce request time, redirect, response-byte, retry, and cursor limits.
+
+Use one reused synchronous HTTP client first. A rate-limited source does not justify an async runtime or generic adapter framework.
 
 ## Outcomes and retries
 
@@ -101,14 +117,15 @@ The first adapter can use one reused synchronous HTTP client. A rate-limited sou
 | `deleted` | Provider deletion or permission revocation | Invalidate affected snapshots and rebuild |
 | `fatal_batch` | Schema mismatch, corrupt state, invalid configuration, or failed publication | Stop without advancing the cursor |
 
-A rerun of the fixed fixture must preserve canonical IDs, content checksums, and outcome counts without creating duplicate search items.
+A fatal error, read failure, database failure, or process interruption rolls back the whole manifest transaction, so no valid prefix can later become publishable. It also leaves an unresolved marker keyed to the canonical manifest path. Until that same path succeeds, a different manifest cannot ingest and Python cannot publish; this prevents unrelated work from reviving stale content after a failed rights change. The separate failed-run audit row records the attempted outcome counts without making its items visible. A rerun of the fixed fixture must preserve canonical IDs, content checksums, and outcome counts without creating duplicate search items.
 
 ## Canonical storage
 
-Ordered language-neutral SQL migrations define three initial entities:
+Ordered language-neutral SQL migrations define four initial entities:
 
 | Entity | Required values |
 |---|---|
+| `corpus_state` | Singleton unresolved-manifest identity used to fail closed across interruption and fatal batches |
 | `meme_item` | ID, kind, title, conditional text or asset URI, language, content identity, availability, safety/review state, people, template group, tags, OCR, caption, search description, and processing version |
 | `source_item` | Nullable meme-item ID, source identity and URLs, creator, rights and attribution, policies, payload path, fetch revision, outcome/reason, and deletion state |
 | `processing_run` | Stage, input/output versions, cursor, timestamps, outcome counts, tool/model versions, and error summary |
@@ -117,7 +134,20 @@ Identical domain-separated content shares one `meme_item` while retaining every 
 
 Searchable fields remain separate in canonical storage. Do not flatten title, people, template, tags, OCR, caption, and descriptions until building the derived search document; retrieval needs their identity and weights.
 
-## Python enrichment boundary
+## Phase 1 Python index build
+
+The Phase 1 builder is deterministic and model-free. It:
+
+1. opens the ingested candidate database and verifies the schema, SQLite integrity, cleared unresolved-manifest state, and latest completed successful ingestion run;
+2. selects only available, safe, reviewed items with complete serving provenance and removes every other item and provenance row from the serving snapshot;
+3. applies the versioned Unicode NFKC and whitespace-normalization function to retrieval copies while preserving original display values;
+4. creates fielded FTS5 rows from title, people, template, tags, source text, reviewed OCR, caption, and description;
+5. verifies serving-row and FTS coverage, canonical content identity, bounded media checksums, and artifact checksums;
+6. writes a complete candidate snapshot and atomically replaces `active.json` only after validation succeeds.
+
+It does not run OCR, create annotations, encode embeddings, or answer queries. A failed candidate never replaces the active snapshot.
+
+## Later Python enrichment boundary
 
 Rust validation does not make a file trusted to a second decoder. Run Python enrichment without network access and with bounded dimensions, subprocess timeouts, temporary output paths, and operating-system CPU, memory, and file limits. A crash or limit breach quarantines the item, not the batch.
 
@@ -148,7 +178,9 @@ Human review is required for benchmark items. Generated annotations elsewhere re
 
 ## Derived artifacts
 
-Each embedding/index build manifest records:
+Every index-build manifest records the applicable values below. Phase 1 records the SQLite/FTS, canonical export, schema, normalization, and tool values; embedding fields appear only after Phase 2 creates that artifact.
+
+Each index build manifest records:
 
 - dataset, schema, normalization, and search-document versions;
 - representation type such as `search_text` or future `image`;
@@ -158,20 +190,20 @@ Each embedding/index build manifest records:
 
 The row at index `i` in `embeddings.npy` belongs to the JSON string on line `i + 1` of `item_ids.jsonl`. Publication rejects missing or duplicate IDs, dimension mismatch, non-finite values, unexpected norms, ineligible items, or checksum disagreement.
 
-Canonical content identity hashes a UTF-8 JSON Lines export ordered by item ID, with sorted keys and LF endings. It excludes timestamps and SQLite page layout. Artifact hashes separately protect the actual files.
+Canonical content identity hashes a UTF-8 JSON Lines export ordered by item ID, including deterministic serving provenance and rights fields, with sorted keys and LF endings. It excludes fetch timestamps and SQLite page layout. Artifact hashes separately protect the actual files.
 
 ## Atomic publication
 
 Python builds a complete candidate snapshot in a versioned staging directory. Before promotion it must:
 
-1. check SQLite integrity, migrations, runtime version, and required FTS support;
+1. check SQLite integrity, migrations, cleared unresolved-manifest state, the latest completed successful ingestion run, runtime version, and required FTS support;
 2. require rights, availability, and safety eligibility for every serving row;
-3. verify FTS coverage, thumbnail references, and item/vector alignment;
-4. run fixed smoke queries and the end-to-end fixture;
+3. verify FTS coverage and every artifact applicable to the phase, including thumbnail references and item/vector alignment once those artifacts exist;
+4. run the phase's fixed smoke checks;
 5. write and verify every checksum;
-6. atomically replace the active-manifest pointer.
+6. sync the completed snapshot directory before atomically replacing and directory-syncing the active-manifest pointer.
 
-A failed build leaves the previous snapshot untouched. A deletion or permission revocation invalidates any active snapshot containing the item; v1 stops search, rebuilds without it, and resumes only after the replacement is published. This avoids maintaining a second mutable suppression system.
+A pre-replacement failure leaves the previous snapshot untouched. The pointer rename is the commit point; a following directory-sync failure is reported as “publication durability unknown” because the new pointer may already be visible and must not be described as rolled back. A deletion or permission revocation invalidates any active snapshot containing the item; v1 stops search, rebuilds a serving snapshot with neither the item nor its ineligible provenance, and resumes only after the replacement is published. Permitted raw-layer retention is governed separately by the source policy. This avoids maintaining a second mutable suppression system.
 
 ## Pipeline measurements
 
