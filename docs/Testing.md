@@ -35,7 +35,7 @@ Do not add a large test framework before the built-in runners become insufficien
 
 Tests are added in their owning phase. Future matrices below are contracts, not evidence that their implementations exist.
 
-## Phase 1 commands
+## Implemented commands
 
 Run the built-in suites from the repository root:
 
@@ -45,13 +45,16 @@ cargo clippy --all-targets -- -D warnings
 PYTHONPATH=python python3 -m unittest discover -s tests/python
 ```
 
-Run the complete executable corpus path:
+Run the complete Phase 1 corpus path and Phase 2 retrieval path:
 
 ```sh
 python3 tests/test_phase1.py
+python3 tests/test_phase2.py
 ```
 
-The acceptance script creates an isolated temporary directory, imports twice, publishes a snapshot, searches its FTS rows for `john cena`, and removes the temporary data. These commands pass for the Phase 1 implementation.
+The acceptance scripts create isolated temporary directories. Phase 1 imports twice, publishes, checks the FTS row for `john cena`, and proves deterministic corpus identity. Phase 2 imports, builds FTS/LSA artifacts, searches `john cena`, evaluates all three routes, exercises the real worker handshake/search/shutdown sequence, and removes the data.
+
+At Phase 2 close these commands pass with twelve Rust tests and twenty-seven Python tests. Clippy runs with warnings denied; the standalone Phase 1 and Phase 2 acceptance scripts also pass offline.
 
 ## Ingestion matrix — Phases 1 and 4
 
@@ -78,14 +81,14 @@ Local record, path, image, text, rights, identity, durability, and outcome cases
 | OCR | Good text; low confidence; no text; timeout; non-zero exit; malformed TSV; output limit; human correction kept separately |
 | Annotations | Source, model, and human origins preserved; confidence boundary; missing optional field; generated value never marked reviewed |
 | Search document | Correct field labels; title/people/template kept distinct; text-only item; image item; empty optional fields |
-| Embeddings | Expected shape; stable ordered IDs; duplicate or missing ID; dimension mismatch; NaN/infinity; wrong norm; wrong model revision |
+| Dense artifacts | Expected LSA shape; stable ordered IDs and vocabulary; duplicate or missing ID; dimension mismatch; NaN/infinity; wrong norm; wrong model revision |
 | SQLite | Ordered migrations; unsupported schema; failed migration rollback; integrity failure; FTS unavailable; serving rows equal index rows |
 | Checksums | Valid artifacts; modified SQLite; modified matrix; modified IDs; canonical content identity stable across timestamps |
 | Publication | Valid atomic switch; validation failure leaves old snapshot; failed, incomplete, or unresolved ingest blocks build; bounded media rehash; pre-rename rollback; post-rename fsync reports uncertain durability; missing artifact; ineligible rows absent from the serving database; deletion rebuild |
 
 Run decoder and OCR failure cases inside the same operating-system limits intended for production ingestion.
 
-Phase 1 owns normalization, SQLite, FTS coverage, canonical checksums, and publication. Phase 2 adds embeddings and retrieval-facing artifact checks. OCR and generated annotation cases begin only when Phase 4's source requires those enrichments.
+Phase 1 owns normalization, SQLite, FTS coverage, canonical checksums, and publication. Phase 2 adds TF-IDF/LSA artifacts and retrieval-facing required-file, checksum, version, shape, ID-alignment, finite-value, and norm checks. OCR and generated annotation cases begin only when Phase 4's source requires those enrichments.
 
 ## Retrieval matrix — Phase 2
 
@@ -106,35 +109,36 @@ The golden corpus contains distinct items for these searches:
 | No match | Out-of-corpus entity | Empty result, not an unrelated nearest vector |
 | Malformed input | Empty, too long, too many cues, invalid filter | Typed validation error before search work |
 
-Also test:
+The implemented Phase 2 suites also cover:
 
 - FTS punctuation, quotes, parentheses, operators, wildcard characters, and Unicode as literal input;
-- exact, dense, and hybrid routes independently;
-- route weight, candidate-depth, and threshold boundaries;
-- stable ties and stable IDs across rebuilds;
-- exact duplicate collapse and template-group caps;
-- deleted, unavailable, unlicensed, unsafe, and wrong-language exclusion;
-- filtered raw top candidates followed by a deeper eligible item, which must refill into the returned list;
-- empty corpus and fewer-than-limit result sets;
+- lexical, dense, and hybrid routes independently;
+- deterministic repeat results and duplicate normalized cues;
+- exact duplicate collapse in ingestion plus template-group cap/refill in ranking;
+- kind/language filters on the serving-only snapshot;
+- no-match and fewer-than-limit result sets;
 - dense failure with explicit lexical-only degradation;
-- corrupt FTS or manifest causing startup failure rather than changed rankings;
-- stale request IDs never replacing a newer UI state.
+- corrupt, missing, extra, or version-incompatible artifacts causing startup failure rather than changed rankings;
+- errors receiving no empty-result or safety credit.
+
+The larger human benchmark must add explicit route-weight/depth/threshold boundary analysis, deleted/unsafe hard-negative cases, and stale-response UI behavior before the first-release score.
 
 ## Protocol matrix — Phase 2
 
-Golden NDJSON fixtures cover:
+The cross-language golden JSON Lines file covers `ready`, `search`, one non-empty `results`, one recoverable `error`, `shutdown`, and `bye`. Rust and Python both decode it. Runtime worker tests additionally cover:
 
-- compatible and incompatible handshakes;
-- valid search and result messages;
-- empty result arrays;
-- recoverable request error and fatal worker error;
-- unknown message type or field policy;
-- missing, duplicated, and mismatched request IDs;
-- invalid JSON, partial line, oversized line, unexpected stdout text, and premature EOF;
-- startup timeout, query timeout, clean shutdown, forced termination, and one explicit restart;
-- diagnostic standard error that cannot corrupt protocol output.
+- ready-first handshake and an incompatible protocol version;
+- valid search and non-empty result messages;
+- recoverable cue validation and a duplicated request ID;
+- invalid JSON including Python's integer limit, partial line, oversized line, and premature EOF;
+- UTF-8 output under a non-UTF-8 locale;
+- immediate failure for oversized input without a terminating newline;
+- deterministic tail truncation at the bounded output frame;
+- clean `shutdown`/`bye` and diagnostic standard error that cannot corrupt protocol output.
 
-Both languages decode the same golden messages. Protocol-version changes require new fixtures rather than silently accepting an incompatible peer.
+Protocol-version changes require new fixtures rather than silently accepting an incompatible peer.
+
+Empty worker results are exercised through the retrieval contract. Unknown types/fields, missing or stale response IDs, startup/query timeout, unexpected worker output, forced termination, and one explicit restart are Rust client lifecycle cases owned by Phase 3.
 
 ## TUI matrix — Phase 3
 
@@ -155,17 +159,16 @@ One PTY smoke test launches the real binary, searches, navigates, selects, quits
 
 ## Evaluator matrix — Phase 2
 
-Small hand-calculated fixtures cover:
+The implemented hand-calculated fixtures cover:
 
-- nDCG with perfect, reversed, short, tied, empty, and zero-ideal lists;
-- ExactMRR with a grade-3 result at each rank and with none;
-- Hit@10 and CorrectEmpty numerator/denominator boundaries;
-- errors and timeouts receiving no retrieval credit;
-- per-slice macro averaging independent of slice size;
-- normalization clipping at each Technical Score boundary;
-- every hard gate, score cap, and critical-failure path;
+- nDCG with perfect, reversed, empty, and zero-ideal lists;
+- ExactMRR with a target at rank two and with none;
+- a perfect Technical Score plus combined latency, error, and slice gate failure;
+- a route error receiving no empty-result or safety credit;
 - paired bootstrap determinism under a fixed seed;
-- score/report schema and benchmark-version mismatch.
+- required benchmark version plus query-family and relevant-item partition isolation.
+
+The human-labelled benchmark and Phase 3 scorecard add exhaustive metric boundaries, every individual hard gate, score/report schema compatibility, timeouts, and score bootstrap coverage.
 
 ## Interaction-event matrix — Phase 3
 
@@ -204,8 +207,10 @@ Phase 2 extends that same fixture through retrieval; Phase 3 completes the user 
 ```text
 published Phase 1 snapshot
     -> Phase 2 worker handshake succeeds
-    -> Rust TUI submits "john cena"
-    -> expected template group appears by rank 3
+    -> Phase 2 headless harness submits "john cena"
+    -> expected stable item appears at rank 1
+    -> worker shuts down through `bye`
+    -> Phase 3 Rust TUI repeats the request
     -> navigation selects the expected stable item ID
     -> optional `choose` interaction records the shown rank only when enabled
     -> clean exit restores the terminal
@@ -233,7 +238,7 @@ Use one declared local PTY and terminal backend at an `80x24` viewport, result l
 | Close | Required evidence |
 |---|---|
 | Phase 1 | Rust and Python suites; local ingestion/build integration; idempotence; quarantine and duplicate outcomes; FTS coverage; checksum stability; publication rollback |
-| Phase 2 | Phase 1 regression; protocol and retrieval suites; evaluator fixtures; frozen benchmark; BM25/dense/hybrid comparison; Technical Score components and gates |
+| Phase 2 | Phase 1 regression; protocol and retrieval suites; evaluator fixtures; provisional public benchmark; BM25/dense/hybrid comparison; explicit semantic decision; MMTS readiness remains incomplete |
 | Phase 3 first release | Phase 2 regression; TUI state/rendering; worker lifecycle; interaction privacy; offline full fixture; PTY restoration; submit-to-render profile |
 | Phase 4 | First-release regression on the enlarged corpus; external-source contract; controlled network security; resume/retry; update/deletion; throughput and resource report |
 

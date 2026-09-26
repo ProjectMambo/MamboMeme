@@ -1189,7 +1189,7 @@ mod tests {
         assert_eq!(
             first,
             Summary {
-                accepted: 3,
+                accepted: 14,
                 duplicate: 1,
                 quarantined: 1,
                 ..Summary::default()
@@ -1198,8 +1198,8 @@ mod tests {
 
         let database = temporary.0.join("staging/corpus.sqlite");
         let connection = Connection::open(database).unwrap();
-        assert_eq!(count(&connection, "meme_item"), 3);
-        assert_eq!(count(&connection, "source_item"), 5);
+        assert_eq!(count(&connection, "meme_item"), 14);
+        assert_eq!(count(&connection, "source_item"), 16);
         assert_eq!(count(&connection, "processing_run"), 1);
         let image_uri: String = connection
             .query_row(
@@ -1215,14 +1215,14 @@ mod tests {
         assert_eq!(
             second,
             Summary {
-                unchanged: 4,
+                unchanged: 15,
                 quarantined: 1,
                 ..Summary::default()
             }
         );
         let connection = Connection::open(temporary.0.join("staging/corpus.sqlite")).unwrap();
-        assert_eq!(count(&connection, "meme_item"), 3);
-        assert_eq!(count(&connection, "source_item"), 5);
+        assert_eq!(count(&connection, "meme_item"), 14);
+        assert_eq!(count(&connection, "source_item"), 16);
         assert_eq!(count(&connection, "processing_run"), 2);
         let unchanged: i64 = connection
             .query_row(
@@ -1231,7 +1231,7 @@ mod tests {
                 |row| row.get(0),
             )
             .unwrap();
-        assert_eq!(unchanged, 4);
+        assert_eq!(unchanged, 15);
     }
 
     #[test]
@@ -1245,7 +1245,7 @@ mod tests {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/corpus/manifest.jsonl");
 
         let summary = ingest(&manifest, &data.0).unwrap();
-        assert_eq!(summary.accepted, 3);
+        assert_eq!(summary.accepted, 14);
         assert!(data.0.join("staging/corpus.sqlite").is_file());
     }
 

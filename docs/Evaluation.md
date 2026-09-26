@@ -36,6 +36,24 @@ Paraphrases, aliases, and near-identical variants belong to the same query famil
 
 A smaller initial benchmark is allowed only with a **provisional** label. Context-aware suggestions have a different task and are excluded from benchmark v1.
 
+## Implemented Phase 2 benchmark
+
+Phase 2 ships `fixture-provisional-v1`: a repository-visible synthetic benchmark with 12 answerable and 4 audited no-match queries in each of development and holdout. Each partition has two queries from every primary answerable slice. Query families and relevant item IDs do not cross partitions. These labels test evaluator and retrieval mechanics; they are neither independent human judgements nor a sealed hidden test.
+
+The versioned [Phase 2 report](https://github.com/ProjectMambo/MamboMeme/blob/main/benchmarks/reports/phase2-provisional.md) records this holdout result:
+
+| Route | nDCG@10 | ExactMRR@10 | Hit@10 | CorrectEmpty | In-process p95 |
+|---|---:|---:|---:|---:|---:|
+| Lexical | 0.993 | 1.000 | 1.000 | 1.000 | 0.086 ms |
+| Dense LSA | 0.915 | 1.000 | 0.917 | 1.000 | 0.101 ms |
+| Hybrid | 0.999 | 1.000 | 1.000 | 1.000 | 0.174 ms |
+
+Timings are one declared local run and will vary by machine. They measure `SearchEngine.search` only, excluding NDJSON serialization, pipes, and rendering. The JSON report also records p50/p99, in-process throughput, peak RSS, artifact sizes, runtime versions, retriever configuration, dataset/snapshot identities, and per-query rankings.
+
+Hybrid's overall nDCG improvement over lexical is `0.005`; its semantic-slice gain is `0.033`; its prompt-family cluster-bootstrap interval for the same macro-slice statistic is `[0.0, 0.0109]`. It misses both effect-size thresholds and the interval's lower bound is not above zero, so the worker defaults to lexical.
+
+MMTS-Search-v1 is deliberately `INCOMPLETE` for every Phase 2 route. The public fixture has no human-labelled safety/adversarial subset, and there is no Rust TUI submit-to-render measurement. Ordinary safe-list rate and in-process search latency remain diagnostics, but the evaluator assigns no aggregate score or `PASS` status until those required inputs exist.
+
 ## Relevance labels
 
 Human judges grade whether each stored item is useful for the search query:
@@ -210,6 +228,8 @@ Keep the dense route in the default system only if hybrid search improves over B
 - at least `+0.05` nDCG@10 on the semantic-concept slice;
 
 with a paired-bootstrap 95% confidence interval whose lower bound is above zero, no hard-gate regression, and no entity/template or quote/OCR nDCG regression greater than `0.02`. Otherwise keep the negative experiment report and ship BM25 alone.
+
+The Phase 2 public holdout applies the same effect-size rule as a provisional engineering decision. Only the future human-labelled hidden benchmark can support a release-quality claim.
 
 ## Reproducible report
 

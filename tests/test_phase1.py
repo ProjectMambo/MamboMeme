@@ -43,7 +43,7 @@ def main() -> None:
         first = json.loads(run(*command))
         second = json.loads(run(*command))
         assert first == {
-            "accepted": 3,
+            "accepted": 14,
             "unchanged": 0,
             "duplicate": 1,
             "quarantined": 1,
@@ -52,7 +52,7 @@ def main() -> None:
         }
         assert second == {
             "accepted": 0,
-            "unchanged": 4,
+            "unchanged": 15,
             "duplicate": 0,
             "quarantined": 1,
             "deleted": 0,
@@ -71,7 +71,7 @@ def main() -> None:
                 env=environment,
             )
         )
-        assert manifest["item_count"] == 3
+        assert manifest["item_count"] == 14
 
         pointer = json.loads((data_dir / "active.json").read_text(encoding="utf-8"))
         database = data_dir / Path(pointer["manifest"]).parent / "corpus.sqlite"

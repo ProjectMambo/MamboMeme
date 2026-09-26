@@ -1,0 +1,50 @@
+{
+  "benchmark_version": "fixture-provisional-v1",
+  "description": "Repository-visible synthetic fixture benchmark; not the human-labelled hidden benchmark.",
+  "judgement_method": "Single-author synthetic fixture intent plus corpus-wide no-match field audit.",
+  "partitions": {
+    "development": {
+      "answerable": 12,
+      "no_match": 4
+    },
+    "holdout": {
+      "answerable": 12,
+      "no_match": 4
+    }
+  },
+  "queries": [
+    {"id":"dev-entity-john-cena","partition":"development","slice":"entity","family":"john-cena","cues":["john cena"],"answerable":true,"relevance":{"mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d":3},"exact_targets":["mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"]},
+    {"id":"dev-entity-drake","partition":"development","slice":"entity","family":"drake-hotline","cues":["drake hotline"],"answerable":true,"relevance":{"mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21":3},"exact_targets":["mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"]},
+    {"id":"dev-quote-cena","partition":"development","slice":"quote","family":"john-cena","cues":["you can't see me"],"answerable":true,"relevance":{"mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d":3},"exact_targets":["mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"]},
+    {"id":"dev-quote-fine","partition":"development","slice":"quote","family":"this-is-fine","cues":["this is fine"],"answerable":true,"relevance":{"mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63":3},"exact_targets":["mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"]},
+    {"id":"dev-topic-wrestling","partition":"development","slice":"topic","family":"john-cena","cues":["wrestling invisible"],"answerable":true,"relevance":{"mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d":3,"mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f":1},"exact_targets":[]},
+    {"id":"dev-topic-pokemon","partition":"development","slice":"topic","family":"surprised-pikachu","cues":["pokemon shock"],"answerable":true,"relevance":{"mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413":3},"exact_targets":[]},
+    {"id":"dev-semantic-success","partition":"development","slice":"semantic","family":"success-kid","cues":["tiny win feels enormous"],"answerable":true,"relevance":{"mm_b0f9b929c404e5232ceaf37fd6f2077686a7d7ef501ca5b59d21915811caf34c":3},"exact_targets":[]},
+    {"id":"dev-semantic-fine","partition":"development","slice":"semantic","family":"this-is-fine","cues":["calmly ignoring a disaster"],"answerable":true,"relevance":{"mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63":3},"exact_targets":[]},
+    {"id":"dev-visual-blue-hand","partition":"development","slice":"visual","family":"abstract-invisible","cues":["blue figure raised hand"],"answerable":true,"relevance":{"mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f":3},"exact_targets":[]},
+    {"id":"dev-visual-pikachu","partition":"development","slice":"visual","family":"surprised-pikachu","cues":["yellow cartoon open mouth"],"answerable":true,"relevance":{"mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413":3},"exact_targets":[]},
+    {"id":"dev-noisy-cena","partition":"development","slice":"noisy","family":"john-cena","cues":["jon sena invis meme"],"answerable":true,"relevance":{"mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d":3,"mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f":1},"exact_targets":[]},
+    {"id":"dev-noisy-drake","partition":"development","slice":"noisy","family":"drake-hotline","cues":["drak hotlin reject"],"answerable":true,"relevance":{"mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21":3},"exact_targets":[]},
+    {"id":"dev-none-rickroll","partition":"development","slice":"no_match","family":"absent-rickroll","cues":["rick astley rickroll"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"dev-none-grumpy","partition":"development","slice":"no_match","family":"absent-grumpy","cues":["grumpy feline ceiling"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"dev-none-aliens","partition":"development","slice":"no_match","family":"absent-aliens","cues":["ancient aliens history channel"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"dev-none-office","partition":"development","slice":"no_match","family":"absent-office","cues":["office handshake merger"],"answerable":false,"relevance":{},"exact_targets":[]},
+
+    {"id":"hold-entity-distracted","partition":"holdout","slice":"entity","family":"distracted-boyfriend","cues":["distracted boyfriend"],"answerable":true,"relevance":{"mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f":3},"exact_targets":["mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f"]},
+    {"id":"hold-entity-harold","partition":"holdout","slice":"entity","family":"hide-pain-harold","cues":["hide pain harold"],"answerable":true,"relevance":{"mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53":3},"exact_targets":["mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53"]},
+    {"id":"hold-quote-change","partition":"holdout","slice":"quote","family":"change-my-mind","cues":["change my mind"],"answerable":true,"relevance":{"mm_63505ff98666c5fa59368830c65467eb1b0abdc3d582805b9cf29acb4933b4ae":3},"exact_targets":["mm_63505ff98666c5fa59368830c65467eb1b0abdc3d582805b9cf29acb4933b4ae"]},
+    {"id":"hold-quote-doge","partition":"holdout","slice":"quote","family":"doge","cues":["such wow"],"answerable":true,"relevance":{"mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed":3},"exact_targets":["mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed"]},
+    {"id":"hold-topic-cat","partition":"holdout","slice":"topic","family":"woman-yelling-cat","cues":["argument cat dinner"],"answerable":true,"relevance":{"mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c":3},"exact_targets":[]},
+    {"id":"hold-topic-boromir","partition":"holdout","slice":"topic","family":"one-does-not-simply","cues":["difficult fantasy warning"],"answerable":true,"relevance":{"mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a":3},"exact_targets":[]},
+    {"id":"hold-semantic-buttons","partition":"holdout","slice":"semantic","family":"two-buttons","cues":["cannot decide between equally bad choices"],"answerable":true,"relevance":{"mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1":3,"mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f":1},"exact_targets":[]},
+    {"id":"hold-semantic-harold","partition":"holdout","slice":"semantic","family":"hide-pain-harold","cues":["pretending happiness while secretly hurting"],"answerable":true,"relevance":{"mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53":3},"exact_targets":[]},
+    {"id":"hold-visual-cat","partition":"holdout","slice":"visual","family":"woman-yelling-cat","cues":["shouting woman puzzled white cat"],"answerable":true,"relevance":{"mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c":3},"exact_targets":[]},
+    {"id":"hold-visual-brain","partition":"holdout","slice":"visual","family":"expanding-brain","cues":["glowing brain panels levels"],"answerable":true,"relevance":{"mm_89608c17d9a26164037bebe8b25847212750b7e17eaae792e850b5b4046c6458":3},"exact_targets":[]},
+    {"id":"hold-noisy-distracted","partition":"holdout","slice":"noisy","family":"distracted-boyfriend","cues":["distract boyfrend relation"],"answerable":true,"relevance":{"mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f":3},"exact_targets":[]},
+    {"id":"hold-noisy-doge","partition":"holdout","slice":"noisy","family":"doge","cues":["dog shiba wowe"],"answerable":true,"relevance":{"mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed":3},"exact_targets":[]},
+    {"id":"hold-none-nyan","partition":"holdout","slice":"no_match","family":"absent-nyan","cues":["nyan rainbow poptart"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"hold-none-spiderman","partition":"holdout","slice":"no_match","family":"absent-spiderman","cues":["spiderman pointing clone"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"hold-none-matrix","partition":"holdout","slice":"no_match","family":"absent-matrix","cues":["matrix red pill"],"answerable":false,"relevance":{},"exact_targets":[]},
+    {"id":"hold-none-oprah","partition":"holdout","slice":"no_match","family":"absent-oprah","cues":["oprah everyone gets car"],"answerable":false,"relevance":{},"exact_targets":[]}
+  ]
+}

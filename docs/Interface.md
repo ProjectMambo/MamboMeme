@@ -12,6 +12,10 @@ The first interface is a local Rust TUI built with [Ratatui](https://ratatui.rs/
 
 A graphical desktop or web interface is not required until the TUI proves the retrieval and selection loop.
 
+## Implementation status
+
+Phase 2 implements the worker side of the interface boundary: a ready-first UTF-8 NDJSON process with strict message types, request IDs, ranked results, recoverable validation errors, fatal framing/artifact errors, and `shutdown`/`bye`. The Ratatui client, terminal lifecycle, actions, feedback, and submit-to-render timing below belong to Phase 3 and are not implemented yet.
+
 ## Primary workflow
 
 ```text
@@ -104,7 +108,7 @@ The Rust application:
 7. sends `shutdown`, waits for bounded clean exit, then terminates only if necessary;
 8. restores cursor, raw mode, and screen before printing final diagnostics.
 
-The worker loads the model once. A worker crash produces one explicit restart option. The application never spawns a new worker per query or retries forever.
+The worker loads and verifies the snapshot once. A worker crash produces one explicit restart option. The application never spawns a new worker per query or retries forever.
 
 ## Keyboard and accessibility
 

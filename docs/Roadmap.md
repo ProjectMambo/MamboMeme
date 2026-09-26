@@ -10,7 +10,7 @@ order: 70
 
 MamboMeme is built in four substantial phases. Each phase leaves a useful, executable system and closes only after its acceptance checks pass. Context-aware suggestions remain future work outside these four phases.
 
-Phase 1 is complete. Its Rust ingester, Python index builder, migration, cleared fixture, and acceptance checks are implemented. Phase 2 ranked retrieval is next; the TUI and external acquisition are not implemented yet.
+Phases 1 and 2 are complete. The repository now has the local corpus, ranked retrieval, evaluator, and long-lived worker. Phase 3 is next; the TUI and external acquisition are not implemented yet.
 
 ## Phase 1: Executable local corpus
 
@@ -43,22 +43,28 @@ Exit when:
 
 ## Phase 2: Ranked retrieval and evaluation
 
+**Status: complete.** Closed with twelve Rust tests, twenty-seven Python tests, the offline Phase 2 fixture, Clippy with warnings denied, and a versioned provisional comparison report.
+
 Build the complete headless search engine on the published Phase 1 corpus.
 
 Deliver in this order:
 
 1. a Python BM25 baseline over the fielded FTS index for people, template names, tags, and quote fragments;
 2. query validation, eligibility filters, duplicate/template handling, deterministic ties, and correct empty results;
-3. the frozen development and hidden benchmarks, evaluator tests, latency and memory measurements, error analysis, and MMTS-Search-v1 report;
-4. a dense text baseline for semantic and visual-description queries;
-5. deterministic hybrid fusion and ablations against the same benchmark;
-6. the long-lived, versioned NDJSON worker with a handshake, one in-flight query, typed errors, timeouts, and clean shutdown.
+3. a repository-visible provisional development/holdout benchmark, evaluator tests, latency and memory measurements, and score-readiness report;
+4. a TF-IDF/LSA dense text baseline for semantic and visual-description queries;
+5. deterministic hybrid fusion and a three-route comparison against the same benchmark;
+6. the long-lived, versioned NDJSON worker with a ready handshake, one in-flight query, typed framing errors, and clean shutdown.
 
-Exit when the worker returns reproducible ranked results and the frozen BM25-versus-hybrid comparison decides whether semantic search earns its complexity. Ship BM25 alone when the dense route fails its documented acceptance rule.
+The worker returns reproducible ranked results. On `fixture-provisional-v1`, hybrid improves overall nDCG@10 by `0.005` and the semantic slice by `0.033`, with a prompt-family bootstrap interval of `[0.0, 0.0109]`; therefore it fails the acceptance rule and lexical search ships as the default. Dense and hybrid remain explicit experimental routes. Field ablations wait for the larger human-labelled benchmark, where they can answer a real error-analysis question.
+
+MMTS-Search-v1 remains `INCOMPLETE`, not `PASS`: Phase 2 has neither the required human-labelled safety/adversarial subset nor Rust TUI submit-to-render latency. The implemented evaluator refuses to manufacture an aggregate score from those missing inputs.
 
 Image embeddings, approximate-nearest-neighbour indexes, a vector database, and a learned reranker are not Phase 2 defaults. Add an experiment only when error analysis identifies a specific gap.
 
 ## Phase 3: Rust TUI and first release
+
+**Status: next.**
 
 Complete the user workflow without changing retrieval ownership.
 

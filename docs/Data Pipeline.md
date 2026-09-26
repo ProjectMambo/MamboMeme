@@ -12,26 +12,27 @@ The data pipeline converts permitted source material into a versioned searchable
 
 ## Pipeline
 
-Phase 1 implements the smallest complete offline path:
+Phases 1 and 2 implement the current offline path:
 
 ```text
 cleared local JSONL manifest + static fixture assets
     -> Rust unresolved-manifest gate, bounded parsing, rights checks, decode, hashing, and deduplication
     -> content-addressed media + canonical/provenance SQLite rows
-    -> Python deterministic fielded FTS5 build
+    -> Phase 1 Python deterministic fielded FTS5 build
+    -> Phase 2 Python TF-IDF/LSA experiment artifacts
     -> integrity, coverage, and checksum validation
     -> atomic active.json publication
 ```
 
-Later phases add retrieval and measured embeddings, resource-limited OCR or annotation where needed, and finally one approved network source. These additions reuse the Phase 1 corpus contract rather than replace it.
+Phase 2 adds a model-free TF-IDF/LSA representation and retrieval artifacts. Later phases may add resource-limited OCR or annotation where needed and finally one approved network source. These additions reuse the Phase 1 corpus contract rather than replace it.
 
 Only one build stage writes at a time. The retrieval worker opens the published snapshot read-only.
 
 ## Implementation status
 
-Phase 1 is complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS snapshot builder, and offline acceptance checks are implemented and passing.
+Phases 1 and 2 are complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS/LSA snapshot builder, retrieval-facing artifact validation, and offline acceptance checks are implemented and passing.
 
-Not implemented in Phase 1: network acquisition, OCR, generated captions, embedding matrices, ranked query retrieval, or interaction feedback.
+Not implemented: network acquisition, OCR, generated captions, pretrained or image embeddings, thumbnails, or interaction feedback. The current dense vectors are derived only from fixture text with TF-IDF and truncated SVD.
 
 ## Source acceptance
 
@@ -134,18 +135,19 @@ Identical domain-separated content shares one `meme_item` while retaining every 
 
 Searchable fields remain separate in canonical storage. Do not flatten title, people, template, tags, OCR, caption, and descriptions until building the derived search document; retrieval needs their identity and weights.
 
-## Phase 1 Python index build
+## Python index build — Phases 1 and 2
 
-The Phase 1 builder is deterministic and model-free. It:
+The builder remains local and model-free. It:
 
 1. opens the ingested candidate database and verifies the schema, SQLite integrity, cleared unresolved-manifest state, and latest completed successful ingestion run;
 2. selects only available, safe, reviewed items with complete serving provenance and removes every other item and provenance row from the serving snapshot;
 3. applies the versioned Unicode NFKC and whitespace-normalization function to retrieval copies while preserving original display values;
 4. creates fielded FTS5 rows from title, people, template, tags, source text, reviewed OCR, caption, and description;
-5. verifies serving-row and FTS coverage, canonical content identity, bounded media checksums, and artifact checksums;
-6. writes a complete candidate snapshot and atomically replaces `active.json` only after validation succeeds.
+5. builds a deterministic TF-IDF matrix, truncates it to at most eight LSA dimensions, canonicalizes component signs, normalizes item vectors, and writes ordered IDs, vocabulary, IDF, components, and vectors;
+6. verifies serving-row, FTS, and dense-ID coverage, canonical content identity, bounded media checksums, shapes, finite values, norms, and artifact checksums;
+7. writes a complete candidate snapshot and atomically replaces `active.json` only after validation succeeds.
 
-It does not run OCR, create annotations, encode embeddings, or answer queries. A failed candidate never replaces the active snapshot.
+It does not run OCR, create annotations, download a model, or answer queries. A failed candidate never replaces the active snapshot. LSA is stored even though the Phase 2 comparison rejected it as the default route; keeping the small experiment artifacts makes the negative result reproducible.
 
 ## Later Python enrichment boundary
 
@@ -178,17 +180,17 @@ Human review is required for benchmark items. Generated annotations elsewhere re
 
 ## Derived artifacts
 
-Every index-build manifest records the applicable values below. Phase 1 records the SQLite/FTS, canonical export, schema, normalization, and tool values; embedding fields appear only after Phase 2 creates that artifact.
+Every index-build manifest records the applicable values below. Phase 2 records the SQLite/FTS and LSA artifacts, canonical export, schema, normalization, builder, representation, and runtime values.
 
 Each index build manifest records:
 
 - dataset, schema, normalization, and search-document versions;
-- representation type such as `search_text` or future `image`;
-- model identifier, immutable revision, preprocessing, dimension, and licence;
-- SQLite, matrix, ordered-ID, thumbnail, and canonical-export checksums;
-- processing tools, environment, and completion time.
+- representation type, currently `fielded_fts5+tfidf_lsa`;
+- dense method and dimension, vocabulary and item counts, and NumPy version;
+- SQLite, matrix, ordered-ID, vocabulary, and canonical-export checksums;
+- builder, SQLite runtime, and compile options.
 
-The row at index `i` in `embeddings.npy` belongs to the JSON string on line `i + 1` of `item_ids.jsonl`. Publication rejects missing or duplicate IDs, dimension mismatch, non-finite values, unexpected norms, ineligible items, or checksum disagreement.
+The row at index `i` in `dense_vectors.npy` belongs to element `i` of `dense_ids.json`. `dense_vocab.json` aligns with `dense_idf.npy` and the columns of `dense_components.npy`. Worker startup rejects a missing or extra required artifact, unsupported contract version, missing or duplicate ID, dimension mismatch, non-finite value, unexpected norm, ineligible item, or checksum disagreement.
 
 Canonical content identity hashes a UTF-8 JSON Lines export ordered by item ID, including deterministic serving provenance and rights fields, with sorted keys and LF endings. It excludes fetch timestamps and SQLite page layout. Artifact hashes separately protect the actual files.
 
@@ -199,9 +201,8 @@ Python builds a complete candidate snapshot in a versioned staging directory. Be
 1. check SQLite integrity, migrations, cleared unresolved-manifest state, the latest completed successful ingestion run, runtime version, and required FTS support;
 2. require rights, availability, and safety eligibility for every serving row;
 3. verify FTS coverage and every artifact applicable to the phase, including thumbnail references and item/vector alignment once those artifacts exist;
-4. run the phase's fixed smoke checks;
-5. write and verify every checksum;
-6. sync the completed snapshot directory before atomically replacing and directory-syncing the active-manifest pointer.
+4. verify every checksum and the Phase 2 item/vector alignment, shape, finite-value, and norm invariants;
+5. sync the completed snapshot directory before atomically replacing and directory-syncing the active-manifest pointer.
 
 A pre-replacement failure leaves the previous snapshot untouched. The pointer rename is the commit point; a following directory-sync failure is reported as “publication durability unknown” because the new pointer may already be visible and must not be described as rolled back. A deletion or permission revocation invalidates any active snapshot containing the item; v1 stops search, rebuilds a serving snapshot with neither the item nor its ineligible provenance, and resumes only after the replacement is published. Permitted raw-layer retention is governed separately by the source policy. This avoids maintaining a second mutable suppression system.
 
@@ -211,7 +212,7 @@ Pipeline health is reported separately from search quality:
 
 - 100% of served items satisfy rights, provenance, safety, availability, and deletion checks;
 - 100% asset integrity and item/vector alignment in the published set;
-- at least 99.5% of otherwise eligible canonical items included in the current index;
+- 100% of otherwise eligible canonical items included in the current index;
 - required metadata completeness by field and source;
 - zero exact duplicate rows in the serving index;
 - quarantine, retry exhaustion, near-duplicate, and deletion-lag counts;

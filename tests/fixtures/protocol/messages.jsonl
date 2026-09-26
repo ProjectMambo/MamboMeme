@@ -1,0 +1,6 @@
+{"dataset_version":"dataset-v1","default_route":"lexical","protocol_version":1,"retriever_version":"bm25-lsa-rrf-v1","routes":["lexical","dense","hybrid"],"type":"ready"}
+{"cues":["john cena"],"filters":{"kind":"text","language":"en"},"limit":10,"protocol_version":1,"request_id":"query-1","route":"lexical","type":"search"}
+{"dataset_version":"dataset-v1","degraded_routes":[],"elapsed_ms":0.5,"protocol_version":1,"request_id":"query-1","results":[{"asset_uri":null,"attribution":"Fixture","caption":null,"dataset_version":"dataset-v1","id":"mm_example","kind":"text","language":"en","matched_fields":["title","people"],"people":["John Cena"],"rank":1,"retriever_version":"bm25-lsa-rrf-v1","routes":["lexical"],"safe":true,"scores":{"dense_rank":null,"fused":0.01639344262295082,"lexical_rank":1},"source":"fixture","source_url":"https://example.invalid/item","tags":["wrestling"],"template":"you can't see me","text":"You can't see me.","title":"John Cena"}],"retriever_version":"bm25-lsa-rrf-v1","route":"lexical","truncated":false,"type":"results"}
+{"code":"invalid_cues","fatal":false,"message":"cues must contain 1..4 strings","protocol_version":1,"request_id":"query-2","type":"error"}
+{"protocol_version":1,"request_id":"stop","type":"shutdown"}
+{"protocol_version":1,"request_id":"stop","type":"bye"}

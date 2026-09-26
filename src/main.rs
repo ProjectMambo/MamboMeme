@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod ingest;
+pub mod protocol;
 
 use std::env;
 use std::error::Error;

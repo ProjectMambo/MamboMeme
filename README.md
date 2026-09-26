@@ -1,7 +1,7 @@
 # MamboMeme
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Status-Phase_1_complete-2ea44f?style=flat-square" alt="Project status: Phase 1 complete" />
+  <img src="https://img.shields.io/badge/Status-Phase_2_complete-2ea44f?style=flat-square" alt="Project status: Phase 2 complete" />
 </p>
 
 MamboMeme is a local search application for finding existing meme images and quotes. A user searches for a name, quote, topic, or description—such as `john cena`—reviews a ranked list, and chooses the item they want.
@@ -25,7 +25,7 @@ It is a **ranked multimodal search project**, not a reply generator in its first
 | Part | Status | Purpose |
 |---|---|---|
 | Data processing and storage | Phase 1 complete | Validate and deduplicate a cleared local fixture, preserve provenance, build fielded FTS5, and publish a versioned corpus. |
-| Retrieval | Phase 2 planned | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
+| Retrieval | Phase 2 complete | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
 | User interface | Phase 3 planned | Let a user search, inspect, navigate, and select results through a Rust terminal interface. |
 | Context-aware suggestions | Future | Convert one message or a short chat into search cues, then reuse the same retrieval engine. |
 
@@ -39,18 +39,18 @@ PHASE 4  one approved external source -> the same corpus contract
 FUTURE   bounded chat context -> search cues -> the same retrieval contract
 ```
 
-The first three phases complete the local search product. Phase 4 proves repeatable real-source ingestion. The TUI and Python worker will exchange versioned newline-delimited JSON over one local subprocess session; neither exists in Phase 1.
+The first three phases complete the local search product. Phase 4 proves repeatable real-source ingestion. Phase 2 implements the Python worker and the shared newline-delimited JSON protocol; Phase 3 will add the Rust TUI client.
 
 ## Why evaluate hybrid search
 
 `john cena` should match names, template labels, tags, and OCR text through lexical search. A query such as `the wrestler you cannot see` may need semantic retrieval because the useful item need not contain the same words.
 
-- Phase 1 builds deterministic SQLite FTS5 data; Phase 2 turns it into the BM25 baseline for exact names, quotes, tags, and rare terms.
-- A Phase 2 dense experiment will test paraphrases, concepts, and visual descriptions.
-- Rank fusion is added only for that measured comparison and does not treat raw BM25 and dense scores as comparable.
+- Phase 2 implements weighted SQLite FTS5/BM25 for exact names, quotes, tags, and rare terms.
+- Its measured dense experiment uses deterministic TF-IDF plus truncated SVD and exact cosine search; it is a lightweight text baseline, not an image model.
+- Reciprocal-rank fusion compares the routes without treating raw BM25 and cosine values as comparable.
 - Image embeddings remain a measured later experiment.
 
-Semantic search stays only if the benchmark shows a meaningful gain over BM25 without harming exact-name and exact-quote search.
+The public fixture comparison did not satisfy the confidence rule, so lexical search remains the default. The dense and hybrid routes stay available for explicit experiments and regression tests.
 
 ## Selection feedback
 
@@ -60,6 +60,6 @@ There is no live self-training in the first release. Official quality scores alw
 
 ## Current status
 
-Phase 1 is complete. The repository contains the initial SQLite migration, a cleared fixture corpus, the Rust local ingester, the deterministic Python FTS snapshot builder, and an offline cross-language check. The commands in [Testing](docs/Testing.md#phase-1-commands) pass from a clean working tree.
+Phases 1 and 2 are complete. The repository contains the local corpus pipeline, weighted lexical search, a small LSA dense experiment, deterministic hybrid ranking, a strict long-lived NDJSON worker, a public provisional benchmark, and offline acceptance checks. The commands in [Testing](docs/Testing.md#implemented-commands) pass from a clean working tree.
 
-There is no retrieval worker, dense model, TUI, external crawler, context assistant, public API, or deployment target yet. See the four substantial delivery phases in the [Roadmap](docs/Roadmap.md).
+The provisional report records excellent fixture retrieval but deliberately leaves MMTS-Search-v1 unscored: the human-labelled safety subset and Rust TUI submit-to-render latency do not exist yet. There is no TUI, external crawler, context assistant, public API, or deployment target. See the four substantial delivery phases in the [Roadmap](docs/Roadmap.md).

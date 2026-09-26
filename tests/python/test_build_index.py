@@ -116,6 +116,16 @@ class BuildIndexTest(unittest.TestCase):
         self.assertEqual(active_before, (self.data_dir / "active.json").read_bytes())
         self.assertEqual(list((self.data_dir / "snapshots").glob(".candidate-*")), [])
 
+    def test_invalid_dense_alignment_cannot_publish(self) -> None:
+        with mock.patch(
+            "mambomeme_search.build_index.DenseIndex",
+            return_value=mock.Mock(ids=[]),
+        ):
+            with self.assertRaisesRegex(BuildError, "dense IDs"):
+                build_snapshot(self.data_dir)
+        self.assertFalse((self.data_dir / "active.json").exists())
+        self.assertEqual(list((self.data_dir / "snapshots").glob(".candidate-*")), [])
+
     def test_search_normalization_is_nfkc_and_collapses_whitespace(self) -> None:
         self.assertEqual(normalize_search_text("  Ｊohn\tCena\n"), "John Cena")
 

@@ -1,5 +1,5 @@
 ---
-description: Components, Rust and Python ownership, process boundaries, data flow, contracts, and planned repository shape.
+description: Components, Rust and Python ownership, process boundaries, data flow, contracts, and repository shape.
 title: Architecture
 order: 10
 ---
@@ -56,7 +56,7 @@ Keep one implementation of each responsibility. Measure before moving a boundary
 
 ## Current implementation boundary
 
-Phase 1 is complete. Its executable boundary is deliberately smaller than the full architecture:
+Phases 1 and 2 are complete. Phase 1 established the durable corpus boundary:
 
 ```text
 cleared local JSONL manifest and static fixture assets
@@ -66,9 +66,20 @@ cleared local JSONL manifest and static fixture assets
     -> Python validates integrity and coverage, checksums artifacts, and atomically publishes active.json
 ```
 
-The initial migration, cleared fixture data, Rust command, Python builder, unit tests, and offline cross-language fixture are implemented. Phase 1 accepts local PPM fixture images only; broader decoding belongs with real-source ingestion.
+Phase 2 extends that published snapshot without changing ownership:
 
-Phase 1 performs no network requests, OCR, model inference, embedding generation, query retrieval, worker communication, or terminal rendering. Those boundaries belong to later phases and must not be inferred from the presence of their design documents.
+```text
+bounded cues + kind/language filters
+    -> weighted FTS5/BM25 lexical route
+    -> optional TF-IDF/LSA exact-cosine route
+    -> deterministic reciprocal-rank fusion and stable ties
+    -> ranked items through a strict UTF-8 NDJSON worker
+    -> provisional fixture evaluator and performance report
+```
+
+The initial migration, cleared fixture data, Rust command, Python builder, retrieval routes, evaluator, protocol types, worker, unit tests, and offline cross-language fixtures are implemented. Local image ingestion still accepts PPM fixture images only; broader decoding belongs with real-source ingestion.
+
+There are still no network requests, OCR calls, pretrained model downloads, image embeddings, terminal rendering, feedback records, or context processing. Those boundaries belong to later phases and must not be inferred from the presence of their design documents.
 
 ## Full offline corpus build
 
@@ -76,14 +87,14 @@ Phase 1 performs no network requests, OCR, model inference, embedding generation
 approved API or cleared local manifest
     -> Rust fetches or reads, validates, hashes, deduplicates, and stages
     -> raw content-addressed assets + SQLite provenance rows
-    -> Python performs constrained OCR and enrichment
-    -> Python builds fielded FTS documents and dense embeddings
+    -> Python performs constrained OCR and enrichment only when a source needs them
+    -> Python builds fielded FTS documents and declared dense representations
     -> Python validates and atomically publishes a corpus snapshot
 ```
 
 The stages do not write concurrently. Rust completes its acquisition transaction before Python enrichment begins. The interactive search worker opens only the published snapshot and treats it as read-only.
 
-Phase 1 stops after local ingestion, deterministic FTS construction, validation, and publication. Model enrichment and embeddings are introduced only by a later phase with their own tests; remote acquisition begins only in Phase 4.
+Phase 2 adds a model-free TF-IDF/LSA representation and retrieval. Pretrained text/image models remain later measured experiments; remote acquisition begins only in Phase 4.
 
 ## Interactive search — Phases 2 and 3
 
@@ -98,40 +109,42 @@ user submits query in Rust TUI
     -> user opens, copies, or selects one item
 ```
 
-Phase 2 creates the worker and headless retrieval. Phase 3 starts one worker per TUI session so the model and corpus load once. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the first release.
+Phase 2 creates the worker and headless retrieval. Phase 3 starts one worker per TUI session so the index and corpus load once. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the first release.
 
-## Online protocol — planned for Phase 2
+## Online protocol — implemented in Phase 2
 
 Use UTF-8 newline-delimited JSON over the worker's standard input and standard output. Standard error is diagnostic output only. Every message has `protocol_version`, `type`, and `request_id` where applicable.
 
-The minimal sequence is:
+The worker receives the corpus path as a launch argument, validates the complete snapshot, and emits `ready`. No extra `hello` message repeats command-line configuration. The minimal sequence is:
 
 ```text
 Rust                              Python
- |------ hello -------------------->|
+ |       starts worker ------------>|
  |<----- ready ---------------------|
  |------ search(request_id) -------->|
  |<----- results(request_id) -------|
  |------ shutdown ----------------->|
- |<----- stopped -------------------|
+ |<----- bye -----------------------|
 ```
 
 Required message types:
 
 | Type | Direction | Purpose |
 |---|---|---|
-| `hello` | Rust to Python | Declare protocol and requested corpus path. |
 | `ready` | Python to Rust | Confirm compatible protocol, loaded corpus, and retriever versions. |
 | `search` | Rust to Python | Submit bounded query cues, filters, and result limit. |
 | `results` | Python to Rust | Return ranked items and route evidence. |
-| `error` | Either | Return a typed, request-scoped or fatal failure. |
-| `shutdown` / `stopped` | Both | Close the session deliberately. |
+| `error` | Python to Rust | Return a typed request-scoped or fatal failure. |
+| `shutdown` | Rust to Python | Request deliberate session closure. |
+| `bye` | Python to Rust | Confirm deliberate closure. |
 
-Malformed messages, protocol mismatches, premature EOF, and timeouts become visible UI errors. V1 permits one in-flight search: the user may keep editing the input, but another submission is disabled until results, an error, or the timeout arrives. A mismatched or stale request ID is therefore a protocol error and never replaces the displayed result set. The TUI may offer one deliberate worker restart; it must not loop indefinitely.
+The implemented worker bounds input lines at 64 KiB and output lines at 16 MiB, writes UTF-8 bytes independent of the process locale, accepts one request at a time, rejects duplicate request IDs, and distinguishes recoverable request errors from fatal framing, protocol, artifact, and search errors. Oversized input fails immediately without waiting for a newline. A result list that would exceed the output bound drops tail results and sets `truncated`; one individually oversized result is fatal. Invalid JSON is recoverable; an oversized or partial line, protocol mismatch, premature input EOF, or internal search failure emits a fatal error and exits non-zero. A valid `shutdown` produces `bye` and exit zero.
+
+Phase 3's Rust client will enforce startup/query timeouts and one in-flight submission in the UI. A mismatched or stale request ID never replaces the displayed result set. The TUI may offer one deliberate worker restart; it must not loop indefinitely.
 
 ## Artifact contract
 
-The table describes the full release contract. Phase 1 implements the raw-media, SQLite, migration, and published-manifest rows; vector and interaction-event artifacts arrive only in their owning phases.
+The table describes the full release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; interaction events arrive only in Phase 3.
 
 Rust and Python exchange durable, inspectable build artifacts:
 
@@ -141,11 +154,11 @@ Rust and Python exchange durable, inspectable build artifacts:
 | Source, rights, outcome, and processing rows in SQLite | Rust writes | Python enriches during a stopped build |
 | Ordered, language-neutral SQL migrations | Shared contract | Both apply or inspect |
 | Field-labelled search documents and FTS tables | Python writes | Python worker reads |
-| L2-normalized `embeddings.npy` and UTF-8 `item_ids.jsonl` | Python writes | Python worker reads |
+| `dense_ids.json`, vocabulary/IDF files, SVD components, and L2-normalized dense vectors | Python writes | Python worker reads |
 | Published manifest and checksums | Python writes | Python worker verifies at startup |
 | Optional interaction events in versioned JSON Lines | Rust writes | Offline Python analysis reads |
 
-The manifest records schema versions, canonical content identity, SQLite runtime and compile options, exact model revision, embedding dimension, ordered-ID checksum, and artifact checksums. Corpus identity is computed from a canonical ordered export rather than SQLite page bytes or timestamps.
+The manifest records schema, builder, normalization, search-document, representation, NumPy and SQLite versions; canonical content identity; dense method and dimension; item/vocabulary counts; and every artifact checksum. Corpus identity is computed from a canonical ordered export rather than SQLite page bytes or timestamps. The snapshot identity also protects the derived artifact manifest.
 
 The Phase 1 portion of one fixed fixture must prove ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection:
 
@@ -153,9 +166,10 @@ The Phase 1 portion of one fixed fixture must prove ingestion, outcomes, publica
 Rust fixture import
     -> expected accepted, duplicate, and quarantine outcomes
     -> Python FTS index build and atomic publication
-    -> Phase 2: development-only "john cena" fixture returns its expected group within the declared rank bound
-    -> Rust protocol client receives and selects the intended stable ID
+    -> Phase 2 worker returns the development-only "john cena" fixture at rank 1
+    -> both languages decode the same golden protocol messages
     -> a second build preserves content identity and ranking
+    -> Phase 3 Rust TUI receives and selects the intended stable ID
 ```
 
 ## Search request
@@ -163,23 +177,25 @@ Rust fixture import
 | Field | Contract |
 |---|---|
 | `request_id` | Session-unique identifier used to pair responses. |
-| `queries` | One to a bounded number of non-empty search cues. Multiple cues are alternate OR-style hints, not conversation turns. |
-| `limit` | Positive result count, default `10`, capped at the public boundary. |
-| `kind` | Optional `text` or `image` filter. |
-| `language` | Optional exact eligibility filter; omission means no language filter. |
-| `safe_only` | Uses the configured mandatory policy and cannot weaken it. |
+| `cues` | One to four non-empty search cues, each at most 512 UTF-8 bytes. Multiple cues are alternate OR-style hints, not conversation turns. |
+| `limit` | Positive result count, default `10`, maximum `50`. |
+| `filters.kind` | Optional `text` or `image` filter. |
+| `filters.language` | Optional simple language tag; omission means no language filter. |
+| `route` | `lexical` by default; `dense` and `hybrid` are explicit experiment routes. |
 
 ## Search result
 
 | Field | Contract |
 |---|---|
-| `item_id`, `kind` | Stable corpus identity and item type. |
+| `id`, `kind` | Stable corpus identity and item type. |
 | `title`, `text`, `asset_uri` | Display fields; text and image items have different required fields. |
-| `thumbnail_uri`, `caption` | Preview material when available. |
+| `caption` | Portable preview material when available. |
 | `people`, `template`, `tags` | Searchable identity and grouping metadata. |
 | `source`, `attribution` | Provenance required by the source policy. |
-| `matched_fields`, `matched_routes` | Explain whether names, tags, OCR, lexical, or semantic evidence contributed. |
+| `matched_fields`, `routes` | Explain whether names, tags, OCR, lexical, or dense evidence contributed. |
 | `rank` | Final one-based position; internal scores are not probabilities. |
+| `scores` | Diagnostic lexical/dense ranks and fused evidence, never a probability. |
+| `truncated` | Worker-envelope flag showing that tail results were removed to satisfy the output bound. |
 | `dataset_version`, `retriever_version` | Reproducibility identifiers. |
 
 An empty result list is a successful search outcome. Invalid input or worker failure is a typed error, never disguised as an empty search.
@@ -190,7 +206,7 @@ An empty result list is a successful search outcome. Invalid input or worker fai
 permitted raw assets and payloads    content-addressed local files      Phase 1
 canonical metadata and FTS           SQLite                            Phase 1
 active corpus                         checksummed manifest pointer       Phase 1
-normalized dense vectors             NumPy matrix + ordered JSONL IDs   Phase 2 if accepted
+TF-IDF/LSA experiment artifacts      NumPy matrices + ordered JSON IDs  Phase 2
 benchmark and reports                 versioned JSON/Markdown            Phase 2
 selection feedback                    optional local JSONL               Phase 3
 ```
@@ -199,7 +215,7 @@ Raw, canonical, and derived data are layers of one corpus, not three competing s
 
 ## Repository shape by phase
 
-Phase 1 uses this single-package shape:
+Phases 1 and 2 use this single-package shape:
 
 ```text
 README.md
@@ -210,20 +226,30 @@ rust-toolchain.toml
 migrations/
     001_initial.sql
 src/
-    main.rs                  `ingest` entry point
+    main.rs                  command entry point and shared protocol module
     ingest.rs                local validation, storage, and outcomes
+    protocol.rs              strict Rust NDJSON message types
 pyproject.toml
 python/mambomeme_search/
-    __init__.py
-    build_index.py           deterministic FTS build and publication
+    build_index.py           deterministic FTS/LSA build and publication
+    dense.py                 TF-IDF/LSA artifact build and exact cosine scan
+    retrieve.py              validation, routes, fusion, and result contract
+    worker.py                long-lived strict NDJSON process
+    evaluate.py              metrics, comparison, and report generation
+    text.py                  shared search normalization and tokenization
+benchmarks/
+    provisional-v1.json
+    reports/phase2-provisional.{json,md}
 tests/
     fixtures/corpus/         cleared local manifest and assets
-    python/                  index and publication tests
+    fixtures/protocol/       cross-language golden messages
+    python/                  index, retrieval, worker, and evaluator tests
     test_phase1.py           offline Rust-to-Python acceptance check
+    test_phase2.py           offline corpus-to-worker acceptance check
 data/                        ignored working and published artifacts
 ```
 
-Phase 2 adds retrieval, evaluation, worker, benchmark, and protocol files only when that phase begins. Phase 3 adds the TUI and interaction-event files. Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
+Phase 3 adds the TUI and interaction-event files. Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
 
 ## Failure behavior
 
@@ -232,7 +258,7 @@ Phase 2 adds retrieval, evaluation, worker, benchmark, and protocol files only w
 | Invalid or rights-incomplete source item | Quarantine the item without losing the batch. |
 | Rust/Python schema mismatch | Stop the build or worker startup. |
 | Corrupt manifest or item/vector mismatch | Refuse publication or startup. |
-| Dense model unavailable | Offer clearly marked lexical-only search when its index is valid. |
+| Dense artifact missing or corrupt at startup | Reject the complete Phase 2 snapshot; lexical-only degradation is allowed only for a runtime dense-route failure after successful startup. |
 | FTS unavailable in a scored run | Fail that run; do not silently change the evaluated system. |
 | Worker crash or timeout | Preserve terminal control, show an error, and allow an explicit restart. |
 | Unsupported terminal image protocol | Use the text/metadata preview and external-open action. |

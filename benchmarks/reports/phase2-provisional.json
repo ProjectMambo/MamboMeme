@@ -1,0 +1,1899 @@
+{
+  "benchmark_status": "PROVISIONAL",
+  "benchmark_version": "fixture-provisional-v1",
+  "dataset_version": "4b5f4b58dccf6d21adf7bbacccbe3fe73699f3731158a833731fa41589a4bbde",
+  "default_route": "lexical",
+  "environment": {
+    "machine": "x86_64",
+    "numpy": "2.5.1",
+    "platform": "Linux-7.1.2-arch3-1-x86_64-with-glibc2.43",
+    "python": "3.14.6",
+    "sqlite": "3.53.3"
+  },
+  "limitations": [
+    "Repository-visible synthetic fixture judgements are not independent human labels.",
+    "In-process search latency excludes NDJSON and UI work; submit-to-render latency begins in Phase 3.",
+    "The fixture holdout is not the sealed hidden benchmark defined for a full release.",
+    "MMTS-Search-v1 is intentionally unscored until safety-subset and TUI latency inputs exist."
+  ],
+  "minimum_performance_queries_per_route": 1000,
+  "peak_rss_kib": 42556,
+  "retrieval_config": {
+    "candidate_depth": 100,
+    "cue_weights": "equal",
+    "dense_minimum_similarity": 0.15,
+    "fts_weights": [
+      0.0,
+      12.0,
+      12.0,
+      10.0,
+      5.0,
+      8.0,
+      3.0,
+      3.0,
+      3.0
+    ],
+    "route_weights": "equal",
+    "rrf_k": 60,
+    "template_limit": 2
+  },
+  "retriever_version": "bm25-lsa-rrf-v1",
+  "routes": {
+    "dense": {
+      "error_rate": 0.0,
+      "metrics": {
+        "development": {
+          "correct_empty": 1,
+          "coverage_harmonic": 1.0,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 1,
+          "macro_ndcg_at_10": 0.9538136114426977,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 0.7228816686561863,
+            "quote": 1.0,
+            "semantic": 1.0,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        },
+        "holdout": {
+          "correct_empty": 1,
+          "coverage_harmonic": 0.9565217391304348,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 0.9166666666666666,
+          "macro_ndcg_at_10": 0.9152368523255616,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 0.5,
+            "quote": 1.0,
+            "semantic": 0.9914211139533698,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        }
+      },
+      "mmts_search_v1": {
+        "in_process_p95_ms": 0.10089585000000001,
+        "missing_inputs": [
+          "human-labelled safety/adversarial subset",
+          "Rust TUI submit-to-render latency"
+        ],
+        "ordinary_safe_list_rate": 1,
+        "retrieval_gate_failures": [],
+        "score": null,
+        "status": "INCOMPLETE"
+      },
+      "performance": {
+        "boundary": "in_process_search",
+        "p50_ms": 0.0466025,
+        "p95_ms": 0.10089585000000001,
+        "p99_ms": 0.11654098999999993,
+        "queries": 1008,
+        "queries_per_second": 24459.26759101183
+      },
+      "query_results": {
+        "development": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-john-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "drake-hotline",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "this-is-fine",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-wrestling",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-pokemon",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "success-kid",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-success",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b0f9b929c404e5232ceaf37fd6f2077686a7d7ef501ca5b59d21915811caf34c"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "this-is-fine",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "abstract-invisible",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-blue-hand",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-pikachu",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-cena",
+            "is_empty": false,
+            "ndcg_at_10": 0.4457633373123725,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "drake-hotline",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-rickroll",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-rickroll",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-grumpy",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-grumpy",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-aliens",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-aliens",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-office",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-office",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ],
+        "holdout": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-distracted",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "change-my-mind",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-change",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_63505ff98666c5fa59368830c65467eb1b0abdc3d582805b9cf29acb4933b4ae"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "doge",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "one-does-not-simply",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-boromir",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "two-buttons",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-buttons",
+            "is_empty": false,
+            "ndcg_at_10": 0.9828422279067397,
+            "ranking": [
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "expanding-brain",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-brain",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_89608c17d9a26164037bebe8b25847212750b7e17eaae792e850b5b4046c6458"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-noisy-distracted",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "doge",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-noisy-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-nyan",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-nyan",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-spiderman",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-spiderman",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-matrix",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-matrix",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-oprah",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-oprah",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ]
+      }
+    },
+    "hybrid": {
+      "error_rate": 0.0,
+      "metrics": {
+        "development": {
+          "correct_empty": 1,
+          "coverage_harmonic": 1.0,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 1,
+          "macro_ndcg_at_10": 0.9617783578036267,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 0.7706701468217607,
+            "quote": 1.0,
+            "semantic": 1.0,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        },
+        "holdout": {
+          "correct_empty": 1,
+          "coverage_harmonic": 1.0,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 1,
+          "macro_ndcg_at_10": 0.998570185658895,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 1.0,
+            "quote": 1.0,
+            "semantic": 0.9914211139533698,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        }
+      },
+      "mmts_search_v1": {
+        "in_process_p95_ms": 0.17366565,
+        "missing_inputs": [
+          "human-labelled safety/adversarial subset",
+          "Rust TUI submit-to-render latency"
+        ],
+        "ordinary_safe_list_rate": 1,
+        "retrieval_gate_failures": [],
+        "score": null,
+        "status": "INCOMPLETE"
+      },
+      "performance": {
+        "boundary": "in_process_search",
+        "p50_ms": 0.105558,
+        "p95_ms": 0.17366565,
+        "p99_ms": 0.20023269999999999,
+        "queries": 1008,
+        "queries_per_second": 9918.05677874976
+      },
+      "query_results": {
+        "development": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-john-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "drake-hotline",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "this-is-fine",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-wrestling",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-pokemon",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "success-kid",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-success",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b0f9b929c404e5232ceaf37fd6f2077686a7d7ef501ca5b59d21915811caf34c"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "this-is-fine",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "abstract-invisible",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-blue-hand",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-pikachu",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-cena",
+            "is_empty": false,
+            "ndcg_at_10": 0.5413402936435214,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "drake-hotline",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-rickroll",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-rickroll",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-grumpy",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-grumpy",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-aliens",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-aliens",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-office",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-office",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ],
+        "holdout": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-distracted",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "change-my-mind",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-change",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_63505ff98666c5fa59368830c65467eb1b0abdc3d582805b9cf29acb4933b4ae"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "doge",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "one-does-not-simply",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-boromir",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a",
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "two-buttons",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-buttons",
+            "is_empty": false,
+            "ndcg_at_10": 0.9828422279067397,
+            "ranking": [
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21",
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "expanding-brain",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-brain",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_89608c17d9a26164037bebe8b25847212750b7e17eaae792e850b5b4046c6458"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-noisy-distracted",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "doge",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-noisy-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-nyan",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-nyan",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-spiderman",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-spiderman",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-matrix",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-matrix",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-oprah",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-oprah",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ]
+      }
+    },
+    "lexical": {
+      "error_rate": 0.0,
+      "metrics": {
+        "development": {
+          "correct_empty": 1,
+          "coverage_harmonic": 1.0,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 1,
+          "macro_ndcg_at_10": 0.9617783578036267,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 0.7706701468217607,
+            "quote": 1.0,
+            "semantic": 1.0,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        },
+        "holdout": {
+          "correct_empty": 1,
+          "coverage_harmonic": 1.0,
+          "exact_mrr_at_10": 1.0,
+          "hit_at_10": 1,
+          "macro_ndcg_at_10": 0.9931099510594131,
+          "query_count": 16,
+          "safe_list_rate": 1,
+          "slice_ndcg_at_10": {
+            "entity": 1.0,
+            "noisy": 1.0,
+            "quote": 1.0,
+            "semantic": 0.9586597063564786,
+            "topic": 1.0,
+            "visual": 1.0
+          }
+        }
+      },
+      "mmts_search_v1": {
+        "in_process_p95_ms": 0.08595065,
+        "missing_inputs": [
+          "human-labelled safety/adversarial subset",
+          "Rust TUI submit-to-render latency"
+        ],
+        "ordinary_safe_list_rate": 1,
+        "retrieval_gate_failures": [],
+        "score": null,
+        "status": "INCOMPLETE"
+      },
+      "performance": {
+        "boundary": "in_process_search",
+        "p50_ms": 0.044929,
+        "p95_ms": 0.08595065,
+        "p99_ms": 0.09366685999999995,
+        "queries": 1008,
+        "queries_per_second": 22129.42451004565
+      },
+      "query_results": {
+        "development": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-john-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "drake-hotline",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-entity-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "john-cena",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-cena",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "this-is-fine",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "dev-quote-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-wrestling",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-topic-pokemon",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "success-kid",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-success",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b0f9b929c404e5232ceaf37fd6f2077686a7d7ef501ca5b59d21915811caf34c"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "this-is-fine",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-semantic-fine",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "abstract-invisible",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-blue-hand",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "surprised-pikachu",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-visual-pikachu",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_bbf08698abfdd22646baf93ca662a56fd50060d066e41cb4e9b8f0a79cf64413"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "john-cena",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-cena",
+            "is_empty": false,
+            "ndcg_at_10": 0.5413402936435214,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f",
+              "mm_88f5a414740ec31b13469307196a9f60b8c9dcbf3f1cf55014015e0e3b3d595f",
+              "mm_2dd50dd51cd611c333955dc02ac67e1b171f58408ae7b7184c274d4adb4b176d"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "drake-hotline",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "dev-noisy-drake",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_5f26324a7521547f66169f490e5624964598d861645d3bae9bb47ec709031a21"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-rickroll",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-rickroll",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-grumpy",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-grumpy",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-aliens",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-aliens",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-office",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "dev-none-office",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ],
+        "holdout": [
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-distracted",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-entity-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53"
+            ],
+            "safe_list": true,
+            "slice": "entity"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "change-my-mind",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-change",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_63505ff98666c5fa59368830c65467eb1b0abdc3d582805b9cf29acb4933b4ae"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 1.0,
+            "family": "doge",
+            "has_exact_targets": true,
+            "hit_at_10": true,
+            "id": "hold-quote-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed"
+            ],
+            "safe_list": true,
+            "slice": "quote"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "one-does-not-simply",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-topic-boromir",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_db6c6bb66998a1342c8017a946da4e8d90a0875916f73ad59a802f14aec91a5a"
+            ],
+            "safe_list": true,
+            "slice": "topic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "two-buttons",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-buttons",
+            "is_empty": false,
+            "ndcg_at_10": 0.9173194127129571,
+            "ranking": [
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "hide-pain-harold",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-semantic-harold",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_f8d6e8b5a927eb59e889ed4a0852adc740e67fdd7715d51f01fa603c14137f53",
+              "mm_d50fbe8fb7a1b635d348fcc40d58ebf8af496635214768aa93502e57e0d8e3d1",
+              "mm_f4e05bf1b6a8e7b97a8779875d916409ddccf3a017ced48d925e711b32a6bb63"
+            ],
+            "safe_list": true,
+            "slice": "semantic"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "woman-yelling-cat",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-cat",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_04f4af797c069582cdf9ea89c83ba7cd19266fc7e0ee3fd9edb030c7bd2bad3c"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "expanding-brain",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-visual-brain",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_89608c17d9a26164037bebe8b25847212750b7e17eaae792e850b5b4046c6458"
+            ],
+            "safe_list": true,
+            "slice": "visual"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "distracted-boyfriend",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-noisy-distracted",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_1265f5954ea0186e9de66fb0e5845024289fd6430cd8ae9b31da8aa869dbed7f"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": true,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "doge",
+            "has_exact_targets": false,
+            "hit_at_10": true,
+            "id": "hold-noisy-doge",
+            "is_empty": false,
+            "ndcg_at_10": 1.0,
+            "ranking": [
+              "mm_b71e2cb0d9cd5a222d967cf472d3759d73b3dc4ba98aa3148a7bbf5f908b20ed"
+            ],
+            "safe_list": true,
+            "slice": "noisy"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-nyan",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-nyan",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-spiderman",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-spiderman",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-matrix",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-matrix",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          },
+          {
+            "answerable": false,
+            "error": false,
+            "exact_rr_at_10": 0.0,
+            "family": "absent-oprah",
+            "has_exact_targets": false,
+            "hit_at_10": false,
+            "id": "hold-none-oprah",
+            "is_empty": true,
+            "ndcg_at_10": 0.0,
+            "ranking": [],
+            "safe_list": true,
+            "slice": "no_match"
+          }
+        ]
+      }
+    }
+  },
+  "search_engine_startup_ms": 11.25862,
+  "semantic_acceptance": {
+    "accepted": false,
+    "entity_quote_max_regression": 0.0,
+    "hybrid_minus_lexical_ndcg": 0.005460234599481861,
+    "paired_bootstrap_95_percent": [
+      0.0,
+      0.010920469198963757
+    ],
+    "semantic_slice_delta": 0.03276140759689128
+  },
+  "snapshot_id": "6d546d79ec8be52b1b8fdbf30cab02923ff72c6e17a37092602c03834a9c1509",
+  "storage": {
+    "canonical.jsonl": 14632,
+    "corpus.sqlite": 106496,
+    "dense_components.npy": 6912,
+    "dense_idf.npy": 976,
+    "dense_ids.json": 982,
+    "dense_vectors.npy": 576,
+    "dense_vocab.json": 1994
+  }
+}

@@ -9,15 +9,17 @@ import os
 import shutil
 import sqlite3
 import tempfile
-import unicodedata
 from contextlib import closing
 from pathlib import Path
 from typing import Any, Iterable
 
+from .dense import DenseIndex, build_lsa_artifacts
+from .text import normalize_search_text
 
-BUILDER_VERSION = "phase1-fts-v1"
+
+BUILDER_VERSION = "phase2-fts-lsa-v1"
 NORMALIZATION_VERSION = "nfkc-whitespace-v1"
-SEARCH_DOCUMENT_VERSION = "fielded-fts-v1"
+SEARCH_DOCUMENT_VERSION = "fielded-fts-lsa-v1"
 REQUIRED_SCHEMA_VERSION = 1
 MAX_MEDIA_BYTES = 16 * 1024 * 1024
 ELIGIBLE_OUTCOMES = ("accepted", "duplicate", "unchanged")
@@ -238,10 +240,32 @@ def _decode_string_array(value: str, field: str, item_id: str) -> list[str]:
     return decoded
 
 
-def normalize_search_text(value: str) -> str:
-    """Normalize retrieval copies without changing canonical display values."""
+def _search_values(row: sqlite3.Row) -> dict[str, str]:
+    values = {column: row[column] or "" for column in SEARCH_COLUMNS}
+    values["people"] = " ".join(
+        _decode_string_array(row["people"], "people", row["id"])
+    )
+    values["tags"] = " ".join(
+        _decode_string_array(row["tags"], "tags", row["id"])
+    )
+    return values
 
-    return " ".join(unicodedata.normalize("NFKC", value).split())
+
+def _dense_document(row: sqlite3.Row) -> str:
+    values = _search_values(row)
+    weights = {
+        "title": 3,
+        "people": 3,
+        "template": 3,
+        "tags": 2,
+        "ocr": 2,
+        "caption": 1,
+        "description": 1,
+        "body_text": 1,
+    }
+    return " ".join(
+        values[field] for field in SEARCH_COLUMNS for _ in range(weights[field])
+    )
 
 
 def _canonical_record(
@@ -362,17 +386,7 @@ def _build_fts(connection: sqlite3.Connection, rows: Iterable[sqlite3.Row]) -> N
                 """
             )
             for row in rows:
-                people = " ".join(
-                    _decode_string_array(row["people"], "people", row["id"])
-                )
-                tags = " ".join(
-                    _decode_string_array(row["tags"], "tags", row["id"])
-                )
-                values = {
-                    **{column: row[column] or "" for column in SEARCH_COLUMNS},
-                    "people": people,
-                    "tags": tags,
-                }
+                values = _search_values(row)
                 connection.execute(
                     "INSERT INTO serving_item (item_id) VALUES (?)", (row["id"],)
                 )
@@ -505,6 +519,9 @@ def build_snapshot(data_dir: str | Path) -> dict[str, Any]:
             rows = _eligible_rows(connection)
             _validate_content(root, rows)
             canonical_records = [_canonical_record(connection, row) for row in rows]
+            dense_documents = [
+                (row["id"], _dense_document(row)) for row in rows
+            ]
             _build_fts(connection, rows)
             _validate_coverage(connection, len(rows))
             _check_database(connection)
@@ -513,10 +530,28 @@ def build_snapshot(data_dir: str | Path) -> dict[str, Any]:
             connection.execute("VACUUM")
 
         _write_bytes(canonical, b"".join(_json_bytes(row) for row in canonical_records))
+        dense_metadata = build_lsa_artifacts(dense_documents, candidate)
+        dense_index = DenseIndex(candidate)
+        if dense_index.ids != [row["id"] for row in rows]:
+            raise BuildError("dense IDs do not match eligible items")
+        if dense_metadata["dense_dimension"] != dense_index.components.shape[0]:
+            raise BuildError("dense dimension does not match built artifacts")
+        if dense_metadata["dense_vocabulary_size"] != len(dense_index.vocabulary):
+            raise BuildError("dense vocabulary size does not match built artifacts")
         canonical_identity = _sha256(canonical)
         artifacts = {
             "canonical.jsonl": _artifact(canonical),
             "corpus.sqlite": _artifact(database),
+            **{
+                name: _artifact(candidate / name)
+                for name in (
+                    "dense_components.npy",
+                    "dense_idf.npy",
+                    "dense_ids.json",
+                    "dense_vectors.npy",
+                    "dense_vocab.json",
+                )
+            },
         }
         manifest = {
             "artifacts": artifacts,
@@ -525,11 +560,12 @@ def build_snapshot(data_dir: str | Path) -> dict[str, Any]:
             "dataset_version": canonical_identity,
             "item_count": len(canonical_records),
             "normalization_version": NORMALIZATION_VERSION,
-            "representation": "fielded_fts5",
+            "representation": "fielded_fts5+tfidf_lsa",
             "schema_version": REQUIRED_SCHEMA_VERSION,
             "search_document_version": SEARCH_DOCUMENT_VERSION,
             "sqlite_compile_options": compile_options,
             "sqlite_version": sqlite3.sqlite_version,
+            **dense_metadata,
         }
         snapshot_id = hashlib.sha256(_json_bytes(manifest)).hexdigest()
         manifest["snapshot_id"] = snapshot_id

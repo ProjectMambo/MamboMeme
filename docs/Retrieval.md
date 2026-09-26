@@ -26,6 +26,8 @@ Multiple cues are OR-style hints. Retrieve each independently and fuse the ranks
 
 Normalize corpus fields and queries with the same versioned function: Unicode NFKC plus whitespace collapse. Preserve original strings for display. Bound cue count, UTF-8 byte length, result limit, and filter values before storage or model work.
 
+The implemented boundary accepts one to four cues, at most 512 UTF-8 bytes each, and one to fifty results. Exact duplicate normalized cues are collapsed. `kind` accepts `text` or `image`; `language` accepts a simple language tag.
+
 ## Search fields
 
 | Field | Best for | Priority |
@@ -45,6 +47,8 @@ Generated descriptions must not bury exact identity evidence. Keep fields separa
 
 SQLite FTS5/BM25 is the mandatory baseline. It should make `john cena` strongly match title, alias, people, template, tags, and OCR fields.
 
+Phase 2 freezes a candidate depth of `100`. Title and people each have weight `12`, template `10`, OCR `8`, tags `5`, and caption, description, and body text `3`. Tokens of four or more characters use an internal prefix term so a noisy partial cue can still recover a candidate. Stable item ID breaks score ties.
+
 The query boundary treats input as plain text, not user-authored FTS grammar:
 
 1. tokenize bounded normalized text;
@@ -57,11 +61,11 @@ Do not expose raw `MATCH` operators. Quotes, parentheses, hyphens, Unicode, and 
 
 ## Semantic route
 
-Dense text retrieval covers meaning that lexical terms miss. It encodes the query and a field-labelled searchable representation into the same vector space and performs cosine search over L2-normalized vectors.
+Dense text retrieval is an experiment for meaning that lexical terms miss. The implemented Phase 2 route builds log-scaled TF-IDF, applies truncated SVD with at most eight dimensions, canonicalizes component signs, and performs exact cosine search over L2-normalized item vectors with a `0.15` minimum similarity.
 
 For the initial corpus, exact NumPy matrix multiplication is enough. A vector database or approximate-nearest-neighbour index is justified only after the real corpus misses its latency target.
 
-The dense representation includes identity fields as well as captions and descriptions. This lets `the wrestler you cannot see` retrieve a John Cena item while still giving the lexical route responsibility for the direct `john cena` query.
+The dense document repeats identity fields more heavily than captions and descriptions. It is a cheap latent-semantic baseline for a tiny local corpus, not a pretrained language model and not a claim of cross-modal understanding.
 
 The first implementation is dense **text-to-text** retrieval. CLIP-style image embeddings are a separate later experiment because their contribution must be measured independently.
 
@@ -69,16 +73,13 @@ The first implementation is dense **text-to-text** retrieval. CLIP-style image e
 
 Construct the static and request-specific eligibility mask before ranking: published, available, licensed, safe, and compatible with the requested kind/language filters. Each route searches only that mask. If a backend cannot mask directly, it must over-fetch and refill deterministically until it finds the required eligible depth or exhausts its candidates.
 
-Retrieve a fixed eligible candidate depth from each active cue and route. Fuse their ranks using weighted reciprocal-rank fusion:
+Retrieve a fixed eligible candidate depth from each active cue and route. Fuse their ranks using reciprocal-rank fusion:
 
 ```text
-RRF(item) =
-  sum(cue_weight * route_weight / (k + route_rank))
-  -------------------------------------------------
-  sum(cue_weight * route_weight for active routes)
+RRF(item) = sum(1 / (60 + route_rank) for each cue/route hit)
 ```
 
-V1 uses equal cue weights. Route weights, candidate depth, `k`, and the minimum-evidence threshold are selected on development data and frozen before the hidden benchmark.
+V1 uses equal cue and route weights, candidate depth `100`, and stable-ID tie-breaking. Lexical candidates require a literal FTS match; dense candidates require cosine similarity of at least `0.15`.
 
 After fusion:
 
@@ -93,16 +94,22 @@ Raw BM25, cosine, and fused values are evidence, not probabilities. An empty lis
 
 ## Baselines and ablations
 
-Evaluate these systems on the same corpus and benchmark:
+Phase 2 evaluates the first three systems on the same corpus and benchmark:
 
 1. lexical BM25 only;
 2. dense text only;
 3. lexical plus dense fusion;
-4. hybrid without each major field in turn;
-5. image-vector route only when implemented;
-6. reranker only after reviewed hard negatives exist.
+4. later: hybrid without each major field when the human benchmark can support useful ablations;
+5. later: an image-vector route only when implemented;
+6. later: a reranker only after reviewed hard negatives exist.
 
 The hybrid system becomes the default only if it improves semantic/concept searches without materially regressing entity, name, template, or exact-quote searches.
+
+## Phase 2 decision
+
+The public `fixture-provisional-v1` comparison reports holdout macro nDCG@10 of `0.993` for lexical, `0.915` for dense, and `0.999` for hybrid. Hybrid improves the semantic slice by `0.033`, but its overall improvement is only `0.005` and the prompt-family cluster-bootstrap interval is `[0.0, 0.0109]`. It misses both effect-size thresholds and the lower bound is not above zero, so dense fusion is **not accepted as the default**.
+
+The worker therefore announces `lexical` as its default route. `dense` and `hybrid` remain explicit routes so the experiment, degradation behavior, and future corpus comparisons stay reproducible.
 
 ## Result presentation
 
@@ -118,6 +125,8 @@ Every ranked result includes enough information for the user and tests to unders
 | Source and attribution | Rights-compliant display |
 | Matched fields and routes | Debugging and optional UI explanation |
 | Dataset and retriever versions | Reproduce the ranking |
+
+The worker response also includes `truncated`. When a 50-result response would exceed the 16 MiB output-frame bound, it removes tail results deterministically and sets that flag instead of emitting invalid NDJSON.
 
 ## Interaction feedback
 

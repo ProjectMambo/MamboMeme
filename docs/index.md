@@ -8,13 +8,13 @@ order: 65
 
 # MamboMeme
 
-MamboMeme is a local ranked-search application for meme images and quotes. Rust owns ingestion and the future terminal interface; Python owns index construction, future ranked retrieval, and evaluation.
+MamboMeme is a local ranked-search application for meme images and quotes. Rust owns ingestion and the future terminal interface; Python owns index construction, ranked retrieval, the long-lived worker, and evaluation.
 
 ## Project boundary
 
 - A query such as `john cena` returns ranked stored assets for the user to inspect and choose.
 - Phase 1 builds a deterministic local SQLite/FTS corpus from a cleared fixture.
-- Phase 2 adds BM25 for exact names, templates, quotes, and tags, then keeps dense text only if it measurably helps descriptions and concepts.
+- Phase 2 implements BM25, a measured LSA dense experiment, deterministic hybrid fusion, evaluation, and the worker. BM25 remains the default because fusion did not pass the confidence rule.
 - Phase 3 adds a Rust TUI connected to one long-lived Python retrieval worker through a versioned local protocol.
 - Phase 4 adds one approved external source through the same corpus contract.
 - Selection feedback is optional offline evidence, never live self-training.
@@ -27,4 +27,4 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 
 ## Project status
 
-Phase 1 is complete. The Rust command ingests and deduplicates bounded local records, the Python builder publishes a deterministic checksummed FTS5 snapshot, and their offline acceptance checks pass. No retrieval worker, dense model, TUI, external source, context assistant, public API, or deployment target is implemented yet.
+Phases 1 and 2 are complete. The bounded local corpus, checksummed FTS5/LSA snapshot, ranked-search routes, evaluator, and strict NDJSON worker pass their offline checks. Phase 3 is the Rust TUI and first-release score; no external source, context assistant, public API, or deployment target is implemented yet.
