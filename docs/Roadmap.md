@@ -10,7 +10,7 @@ order: 70
 
 MamboMeme is built in four substantial phases. Each phase leaves a useful, executable system and closes only after its acceptance checks pass. Context-aware suggestions remain future work outside these four phases.
 
-Phases 1 and 2 are complete. The repository now has the local corpus, ranked retrieval, evaluator, and long-lived worker. Phase 3 is next; the TUI and external acquisition are not implemented yet.
+Phases 1 through 3 are complete. The repository now has the local corpus, ranked retrieval, evaluator, long-lived worker, Rust TUI, optional private feedback, PTY acceptance path, and interface profile. Phase 4's single approved external source is next.
 
 ## Phase 1: Executable local corpus
 
@@ -64,7 +64,7 @@ Image embeddings, approximate-nearest-neighbour indexes, a vector database, and 
 
 ## Phase 3: Rust TUI and first release
 
-**Status: next.**
+**Status: complete.** Closed as a source release with twenty-eight Rust tests, twenty-seven Python unit tests, the Phase 1–3 offline fixtures, Clippy with warnings denied, PTY restoration on success and fatal-worker paths, and a versioned 1,024-measurement interface profile.
 
 Complete the user workflow without changing retrieval ownership.
 
@@ -76,13 +76,19 @@ Deliver:
 - deterministic state and rendering tests plus PTY terminal-restoration smoke tests;
 - opt-in local interaction-event capture, inspection, immediate disable, retention, and deletion;
 - end-to-end submit-to-render measurements and the complete fixture selection path;
-- a reproducible release scorecard, usage documentation, and packaged first release.
+- a reproducible interface score-readiness report, source-release commands, and usage documentation.
 
-Exit when a user can launch MamboMeme, search the fixture, inspect ranked items, explicitly select the expected stable ID, and quit through success and failure paths without terminal corruption. The release must pass the relevant MMTS-Search-v1 gates.
+The implemented TUI uses portable metadata previews rather than inline images and exposes copy material in a notice rather than writing to the platform clipboard. One worker is reused per session; protocol waits are five seconds and a fatal state offers at most one deliberate restart.
+
+Phase 3 exits when a user can launch MamboMeme from source, search the fixture, inspect ranked items, explicitly select the expected stable ID, and quit through success and fatal-worker paths without terminal corruption; the latency and reliability interface gates must pass. It does **not** require or claim a complete MMTS-Search-v1 score: that score remains null and `INCOMPLETE` until an independent human-labelled hidden benchmark with its safety subset exists. This replaces the earlier contradictory requirement to pass gates whose required labels were absent.
+
+The checked-in release-mode `80×24` PTY profile reports `75.121 ms` worker startup, `10.569/11.377/11.668 ms` p50/p95/p99 submit-to-completed-result-state latency, and zero request errors. These figures are regression evidence for the declared local boundary, not physical key-to-emulator-paint or universal hardware evidence.
 
 Mouse support, themes, a GUI, uploaded telemetry, and context-aware replies do not block the release.
 
 ## Phase 4: One approved external source
+
+**Status: next.**
 
 Replace the local-only acquisition boundary with one real, policy-reviewed source while preserving the same canonical corpus contract.
 

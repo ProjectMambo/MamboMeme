@@ -128,32 +128,38 @@ Every ranked result includes enough information for the user and tests to unders
 
 The worker response also includes `truncated`. When a 50-result response would exceed the 16 MiB output-frame bound, it removes tail results deterministically and sets that flag instead of emitting invalid NDJSON.
 
+The Phase 3 TUI requests one cue, the default lexical route, and at most ten results. It validates the result envelope in Rust, shows a ranked list and metadata preview, and returns the explicitly selected stable ID as JSON after restoring the terminal.
+
 ## Interaction feedback
 
-An `interaction_event` may be recorded locally when the user explicitly enables feedback. Its action is one of `preview`, `open`, `copy`, `choose`, `reformulate`, or `abandon`. Only `choose` is the v1 success signal; the other actions are diagnostic and must never be silently relabelled as a selection.
+An interaction event may be recorded locally when the user explicitly enables feedback. Its action is one of `open`, `copy`, `choose`, `reformulate`, or `abandon`. Highlight/preview movement is not logged. `open` is recorded only after the platform opener launches, although the later viewer outcome is unknowable. `copy` records the manual-copy notice because v1 does not write to the clipboard. Only `choose` is the v1 success signal.
+
+Events use schema version `1` and one JSON object per line at `<data-dir>/feedback/interaction-events.jsonl`. Each object contains exactly:
+
+```text
+schema_version, event_id, session_id, timestamp_unix_ms,
+request_id, query, returned[{id, rank}], action,
+target_id, shown_rank, dataset_version, retriever_version,
+interface_version, elapsed_since_render_ms
+```
+
+`returned` is the ordered worker result list, not proof that every row was visible or inspected. `target_id` and `shown_rank` are null for untargeted actions; `shown_rank` is the target's returned-list rank. `interface_version` is `tui-v1`; IDs are random launch/event identifiers rather than user identifiers.
 
 The initial privacy contract is:
 
 - logging is off by default, and disabling it stops new writes immediately;
 - events stay in one owner-readable/writable local file with mode `0600` where the platform supports it;
-- raw normalized query text is stored only after opt-in because reformulation analysis requires it; hashing a low-entropy query is not anonymization;
+- the trimmed submitted query is stored only when feedback was enabled for that search; hashing a low-entropy query is not anonymization;
 - one random session ID is created per launch and is never reused as a user identity;
 - events expire after 30 days by default and the user can delete the file immediately;
 - no event contains chat context, clipboard contents, machine identity, or a stable user ID;
 - nothing is uploaded without a separate explicit export/upload action and consent.
 
-Minimum fields are:
-
-- schema version, random event ID, random launch-scoped session ID, and UTC timestamp;
-- request ID and raw normalized query text under the retention policy;
-- ordered IDs and ranks that were actually shown;
-- action plus target item ID and shown rank when that action targets an item;
-- dataset, retriever, and interface versions;
-- elapsed time since the associated result list was completely rendered.
+The directory and file use owner-only `0700` and `0600` permissions on Unix. Expired-event cleanup is attempted on every TUI launch, whenever logging is enabled, and before inspection. A malformed log disables capture and shows a notice without blocking search. `mambomeme feedback inspect --data-dir DIR` prints valid local records and `mambomeme feedback delete --data-dir DIR` removes the file immediately.
 
 Selection is biased by rank, exposure, popularity, familiarity, and preview quality. Therefore:
 
-- report `choose` and the diagnostic actions as observational product data, not benchmark truth;
+- report `choose` and the diagnostic actions as observational product data over returned rankings, not benchmark truth or exposure evidence;
 - do not update live rankings directly from raw selections;
 - use reviewed selections for hard-negative analysis first;
 - require randomized or interleaved exposure with logged propensities before causal click-learning claims;

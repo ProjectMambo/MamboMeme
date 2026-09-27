@@ -33,7 +33,7 @@ Do not add a large test framework before the built-in runners become insufficien
 | Phase 3 — TUI and release | State/rendering, keys, preview and explicit selection, worker lifecycle, interaction events, PTY restoration, submit-to-render latency, and full end to end |
 | Phase 4 — approved external source | URL and address policy, redirects, HTTP limits, retries, cursor resume, source updates/deletions, throughput, and deletion lag |
 
-Tests are added in their owning phase. Future matrices below are contracts, not evidence that their implementations exist.
+Tests are added in their owning phase. Phases 1 through 3 are implemented; Phase 4 network cases and the independent human-labelled hidden benchmark remain future contracts.
 
 ## Implemented commands
 
@@ -50,11 +50,12 @@ Run the complete Phase 1 corpus path and Phase 2 retrieval path:
 ```sh
 python3 tests/test_phase1.py
 python3 tests/test_phase2.py
+PYTHONPATH=python python3 tests/test_phase3.py
 ```
 
-The acceptance scripts create isolated temporary directories. Phase 1 imports twice, publishes, checks the FTS row for `john cena`, and proves deterministic corpus identity. Phase 2 imports, builds FTS/LSA artifacts, searches `john cena`, evaluates all three routes, exercises the real worker handshake/search/shutdown sequence, and removes the data.
+The acceptance scripts create isolated temporary directories. Phase 1 imports twice, publishes, checks the FTS row for `john cena`, and proves deterministic corpus identity. Phase 2 imports, builds FTS/LSA artifacts, searches `john cena`, evaluates all three routes, exercises the real worker handshake/search/shutdown sequence, and removes the data. Phase 3 builds the Rust binary, launches the real TUI in an `80×24` PTY, selects the expected stable ID, inspects and deletes an opted-in event, proves immediate feedback disable and malformed-log isolation, exercises a fatal worker-output path, verifies terminal restoration, and produces success and all-error 1,024-measurement interface profiles.
 
-At Phase 2 close these commands pass with twelve Rust tests and twenty-seven Python tests. Clippy runs with warnings denied; the standalone Phase 1 and Phase 2 acceptance scripts also pass offline.
+At Phase 3 close these commands pass with twenty-eight Rust tests and twenty-seven Python unit tests. Clippy runs with warnings denied; the standalone Phase 1, Phase 2, and Phase 3 acceptance scripts also pass offline. `cargo fmt --all -- --check`, Python byte-compilation, and `git diff --check` are release hygiene checks.
 
 ## Ingestion matrix — Phases 1 and 4
 
@@ -138,24 +139,22 @@ The cross-language golden JSON Lines file covers `ready`, `search`, one non-empt
 
 Protocol-version changes require new fixtures rather than silently accepting an incompatible peer.
 
-Empty worker results are exercised through the retrieval contract. Unknown types/fields, missing or stale response IDs, startup/query timeout, unexpected worker output, forced termination, and one explicit restart are Rust client lifecycle cases owned by Phase 3.
+The Phase 3 Rust client tests cover one worker across search and clean shutdown, timeout plus child reaping, recoverable worker errors without session loss, incompatible protocol and oversized output, result-count limits, worker death, and table-driven rejection of mismatched IDs/versions/routes, invalid ranks, unsafe or unidentified items, duplicate IDs, and invalid item routes.
 
 ## TUI matrix — Phase 3
 
-Pure state and `TestBackend` tests cover:
+Six pure state/render tests exercise:
 
-| Area | Cases |
+| Area | Implemented evidence |
 |---|---|
-| Startup | Loading, ready, missing corpus, protocol mismatch, worker failure |
-| Input | Type, delete, clear, Unicode, long query, submit, validation error, retained reformulation |
-| Results | Loading, populated, fewer than page size, empty, recoverable error, route degradation indicator |
-| Navigation | Up/down, first/last, page movement, focus changes, no results, one result |
-| Selection | Preview differs from select; open/copy/select targets the highlighted stable ID; failed action preserves state |
-| Layout | Wide, narrow, minimum size, resize, long fields, missing thumbnail, text-only result, image fallback |
-| Help and exit | Help from every normal state; `Esc` behavior; quit; worker shutdown |
-| Feedback | Disabled default, enabled indicator, explicit action only, correct shown ranks, immediate disable, local deletion |
+| Input | Unicode typing and deletion, `Ctrl-U`, explicit submit, and blocked resubmission while searching |
+| Navigation/actions | Clamped page movement and open/select actions targeting the highlighted stable ID |
+| Focus/exit | Results-to-query `Esc`, query-to-quit `Esc`, and global `Ctrl-C` |
+| Result states | Empty, recoverable error, fatal error, and the restart action |
+| Feedback | Explicit `F2` action, visible enabled state, and no toggle from fatal state |
+| Rendering | Wide, narrow, and too-small layouts; Unicode/long fields; missing-image fallback; degradation text |
 
-One PTY smoke test launches the real binary, searches, navigates, selects, quits, and verifies that raw mode, cursor visibility, and the alternate screen are restored. A second path kills the worker or triggers a panic and verifies the same restoration.
+The Phase 3 PTY script launches the real binary, searches `john cena`, selects the expected rank-one stable ID, and proves the original termios settings, alternate screen, and cursor visibility are restored. Further sessions prove immediate post-render feedback disable, a malformed feedback file cannot block the Ready state or mutate the file, and a worker that closes after a request renders a fatal state and restores the terminal. Panic-path restoration and live resize-event injection are not claimed by this fixture.
 
 ## Evaluator matrix — Phase 2
 
@@ -168,25 +167,13 @@ The implemented hand-calculated fixtures cover:
 - paired bootstrap determinism under a fixed seed;
 - required benchmark version plus query-family and relevant-item partition isolation.
 
-The human-labelled benchmark and Phase 3 scorecard add exhaustive metric boundaries, every individual hard gate, score/report schema compatibility, timeouts, and score bootstrap coverage.
+The Phase 3 profile test covers deterministic shuffled blocks and nearest-rank percentile math. The end-to-end fixture verifies the real PTY boundary, exact warm-up/measurement counts, provenance fields, finite metrics, passing success gates, a deliberately failed reliability gate for an all-error worker, and an intentionally incomplete/null MMTS field. Exhaustive individual MMTS hard-gate and score-bootstrap coverage waits for the independent human-labelled benchmark.
 
 ## Interaction-event matrix — Phase 3
 
-Test that:
+Rust unit tests prove that disabled logging creates no file, enabling records a `choose` event with the target rank, Unix directory/file modes are `0700`/`0600`, delete is immediate and idempotent, and 30-day cleanup removes only expired records. The PTY fixture verifies the complete serialized field set plus CLI inspection and deletion against a real selected result.
 
-- feedback is off by default and no file is created;
-- enabling and disabling take effect immediately;
-- the file is owner-only where supported, expires events after 30 days, and supports immediate deletion;
-- preview, open, copy, choose, reformulate, and abandon are distinguishable, with only `choose` counted as success;
-- shown item IDs and positions match the rendered list;
-- each launch has a new random session ID and no stable user or machine ID;
-- raw normalized queries appear only after opt-in and are never replaced with a misleading "anonymous" hash;
-- duplicate event IDs are rejected during analysis;
-- no chat context, clipboard content, or stable user ID is stored;
-- retention cleanup deletes expired local events;
-- events from incompatible dataset or retriever versions are not merged silently.
-
-Raw interaction events do not alter retrieval in any test. A later learning experiment receives its own train/evaluation isolation tests.
+The schema distinguishes `open`, `copy`, `choose`, `reformulate`, and `abandon`; highlight-only preview is intentionally not an event. The implementation creates random event and launch-scoped session IDs, stores only the opted-in submitted query and ordered returned IDs/ranks, and has no field for viewport exposure, chat context, clipboard content, machine identity, or stable user identity. Raw interaction events do not alter retrieval. Duplicate-ID/version analysis and any learned-ranking experiment require separate offline-analysis tests when that analysis exists.
 
 ## Incremental end-to-end fixture
 
@@ -212,7 +199,7 @@ published Phase 1 snapshot
     -> worker shuts down through `bye`
     -> Phase 3 Rust TUI repeats the request
     -> navigation selects the expected stable item ID
-    -> optional `choose` interaction records the shown rank only when enabled
+    -> optional `choose` interaction records the returned-list rank only when enabled
     -> clean exit restores the terminal
 ```
 
@@ -220,7 +207,7 @@ The fixture always runs offline. Phase 1 must reproduce canonical content identi
 
 ## Performance regression checks — Phases 2 through 4
 
-The fixed performance profile measures:
+The complete planned performance profile measures:
 
 - worker cold start and model/index load;
 - engine p50, p95, and p99 search latency;
@@ -231,7 +218,7 @@ The fixed performance profile measures:
 - ingestion items per second, p95 item time, and peak memory;
 - full and incremental rebuild duration.
 
-Use one declared local PTY and terminal backend at an `80x24` viewport, result limit `10`, and the frozen corpus/model. Start the end-to-end clock when the TUI accepts the submit key and stop it only after the backend completes drawing the status plus the entire returned list. Repeat every benchmark query equally in shuffled blocks. Run 100 warm-ups followed by at least 1,000 measured searches with result caching disabled. Charge timeouts their full limit and count them as errors. Performance tests report the terminal, hardware, runtime, corpus, and model versions; they are not ordinary unit tests on every commit.
+Phase 3 implements a release-mode Crossterm PTY profile at an `80x24` viewport and result limit `10`: 128 warm-ups, 1,024 measurements, equally repeated queries in deterministic shuffled blocks, and result caching disabled. Timing spans the Searching-state write through the completed result/error-state write and includes the controller channel, 10 ms polling, worker protocol, validation, and Crossterm output. The report pins corpus/retriever/snapshot identities, records environment provenance, counts request errors, and charges timeouts at least five seconds. Physical key delivery, terminal-emulator paint, memory, storage, and rebuild measurements remain outside that boundary.
 
 ## Phase gates
 
@@ -239,7 +226,7 @@ Use one declared local PTY and terminal backend at an `80x24` viewport, result l
 |---|---|
 | Phase 1 | Rust and Python suites; local ingestion/build integration; idempotence; quarantine and duplicate outcomes; FTS coverage; checksum stability; publication rollback |
 | Phase 2 | Phase 1 regression; protocol and retrieval suites; evaluator fixtures; provisional public benchmark; BM25/dense/hybrid comparison; explicit semantic decision; MMTS readiness remains incomplete |
-| Phase 3 first release | Phase 2 regression; TUI state/rendering; worker lifecycle; interaction privacy; offline full fixture; PTY restoration; submit-to-render profile |
+| Phase 3 source release | Phase 2 regression; TUI state/rendering; worker lifecycle; interaction privacy; offline full fixture; PTY restoration; interface profile; MMTS explicitly remains incomplete without hidden human safety labels |
 | Phase 4 | First-release regression on the enlarged corpus; external-source contract; controlled network security; resume/retry; update/deletion; throughput and resource report |
 
 Rights, provenance, safety, and artifact-integrity violations block every phase. A later phase never weakens an earlier phase's gate.

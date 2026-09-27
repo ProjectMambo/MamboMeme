@@ -56,7 +56,7 @@ Keep one implementation of each responsibility. Measure before moving a boundary
 
 ## Current implementation boundary
 
-Phases 1 and 2 are complete. Phase 1 established the durable corpus boundary:
+Phases 1 through 3 are complete. Phase 1 established the durable corpus boundary:
 
 ```text
 cleared local JSONL manifest and static fixture assets
@@ -77,9 +77,20 @@ bounded cues + kind/language filters
     -> provisional fixture evaluator and performance report
 ```
 
-The initial migration, cleared fixture data, Rust command, Python builder, retrieval routes, evaluator, protocol types, worker, unit tests, and offline cross-language fixtures are implemented. Local image ingestion still accepts PPM fixture images only; broader decoding belongs with real-source ingestion.
+Phase 3 completes the local interaction path:
 
-There are still no network requests, OCR calls, pretrained model downloads, image embeddings, terminal rendering, feedback records, or context processing. Those boundaries belong to later phases and must not be inferred from the presence of their design documents.
+```text
+explicit query submission in a Ratatui/Crossterm TUI
+    -> one background Rust controller talks to one Python worker per session
+    -> validated results render as a ranked list plus portable metadata preview
+    -> open, manual-copy, or explicit stable-ID selection
+    -> optional private JSONL interaction event
+    -> bounded shutdown and terminal restoration
+```
+
+The initial migration, cleared fixture data, Rust command, Python builder, retrieval routes, evaluator, protocol types, worker, TUI, feedback log, profiler, unit tests, and offline cross-language fixtures are implemented. Local image ingestion still accepts PPM fixture images only; broader decoding belongs with real-source ingestion.
+
+There are still no network requests, OCR calls, pretrained model downloads, image embeddings, inline terminal images, platform clipboard writes, uploaded telemetry, or context processing. Those boundaries belong to later work and must not be inferred from the presence of their design documents.
 
 ## Full offline corpus build
 
@@ -109,7 +120,7 @@ user submits query in Rust TUI
     -> user opens, copies, or selects one item
 ```
 
-Phase 2 creates the worker and headless retrieval. Phase 3 starts one worker per TUI session so the index and corpus load once. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the first release.
+Phase 2 creates the worker and headless retrieval. Phase 3 starts one worker per TUI session so the index and corpus load once. Search runs on a controller thread while the terminal event loop remains responsive. There is no HTTP server, embedded Python, per-query process, or duplicate Rust search implementation in the source release.
 
 ## Online protocol — implemented in Phase 2
 
@@ -140,11 +151,11 @@ Required message types:
 
 The implemented worker bounds input lines at 64 KiB and output lines at 16 MiB, writes UTF-8 bytes independent of the process locale, accepts one request at a time, rejects duplicate request IDs, and distinguishes recoverable request errors from fatal framing, protocol, artifact, and search errors. Oversized input fails immediately without waiting for a newline. A result list that would exceed the output bound drops tail results and sets `truncated`; one individually oversized result is fatal. Invalid JSON is recoverable; an oversized or partial line, protocol mismatch, premature input EOF, or internal search failure emits a fatal error and exits non-zero. A valid `shutdown` produces `bye` and exit zero.
 
-Phase 3's Rust client will enforce startup/query timeouts and one in-flight submission in the UI. A mismatched or stale request ID never replaces the displayed result set. The TUI may offer one deliberate worker restart; it must not loop indefinitely.
+The Phase 3 Rust client validates the ready handshake, request ID, corpus/retriever versions, requested and announced routes, result count, rank sequence, safe flag, and non-empty unique result IDs. Each protocol response has a five-second timeout. The UI permits one in-flight submission, treats request validation errors as recoverable, treats worker/protocol failures as fatal, and offers at most one deliberate `r` restart per session. A stale or mismatched response is rejected before it can replace the displayed result set.
 
 ## Artifact contract
 
-The table describes the full release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; interaction events arrive only in Phase 3.
+The table describes the implemented local-release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; Phase 3 implements the optional interaction events.
 
 Rust and Python exchange durable, inspectable build artifacts:
 
@@ -215,7 +226,7 @@ Raw, canonical, and derived data are layers of one corpus, not three competing s
 
 ## Repository shape by phase
 
-Phases 1 and 2 use this single-package shape:
+Phases 1 through 3 use this single-package shape:
 
 ```text
 README.md
@@ -226,9 +237,14 @@ rust-toolchain.toml
 migrations/
     001_initial.sql
 src/
-    main.rs                  command entry point and shared protocol module
+    main.rs                  ingest, TUI, feedback, and profile command dispatch
     ingest.rs                local validation, storage, and outcomes
     protocol.rs              strict Rust NDJSON message types
+    worker.rs                bounded Python process and response validation
+    tui.rs                   state, keys, result/preview rendering, and help
+    interface.rs             terminal guard, controller, actions, and lifecycle
+    feedback.rs              opt-in private JSONL events and retention
+    profile.rs               release-mode PTY submit-to-render profile
 pyproject.toml
 python/mambomeme_search/
     build_index.py           deterministic FTS/LSA build and publication
@@ -240,16 +256,18 @@ python/mambomeme_search/
 benchmarks/
     provisional-v1.json
     reports/phase2-provisional.{json,md}
+    reports/phase3-interface.json
 tests/
     fixtures/corpus/         cleared local manifest and assets
     fixtures/protocol/       cross-language golden messages
     python/                  index, retrieval, worker, and evaluator tests
     test_phase1.py           offline Rust-to-Python acceptance check
     test_phase2.py           offline corpus-to-worker acceptance check
+    test_phase3.py           offline PTY selection, feedback, failure, and profile
 data/                        ignored working and published artifacts
 ```
 
-Phase 3 adds the TUI and interaction-event files. Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
+Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
 
 ## Failure behavior
 

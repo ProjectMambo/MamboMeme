@@ -58,7 +58,7 @@ pub struct Filters {
     pub language: Option<String>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ResultItem {
     pub asset_uri: Option<String>,
@@ -83,7 +83,7 @@ pub struct ResultItem {
     pub title: String,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Scores {
     pub dense_rank: Option<usize>,

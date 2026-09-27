@@ -1,0 +1,37 @@
+{
+  "interface_version": "tui-v1",
+  "benchmark_version": "fixture-provisional-v1",
+  "dataset_version": "4b5f4b58dccf6d21adf7bbacccbe3fe73699f3731158a833731fa41589a4bbde",
+  "retriever_version": "bm25-lsa-rrf-v1",
+  "snapshot_id": "ff5f7e04e9032771f66db37e899448d0e7bd9095bc313822da0d25b24c64c668",
+  "backend": "crossterm-pty",
+  "viewport": "80x24",
+  "result_limit": 10,
+  "warmups": 128,
+  "measurements": 1024,
+  "worker_startup_ms": 75.120694,
+  "submit_to_render_p50_ms": 10.568628,
+  "submit_to_render_p95_ms": 11.376828999999999,
+  "submit_to_render_p99_ms": 11.667796,
+  "request_error_rate": 0.0,
+  "query_projection": "space-joined-cues",
+  "operating_system": "linux",
+  "architecture": "x86_64",
+  "build_profile": "release",
+  "package_version": "0.1.0",
+  "protocol_version": 1,
+  "rust_minimum_version": "1.95",
+  "python_version": "Python 3.14.6",
+  "terminal": "xterm-256color",
+  "cpu_model": "AMD Ryzen 9 7940HS w/ Radeon 780M Graphics",
+  "cargo_lock_sha256": "63507b77b2e883305b018f38ca804fe693402ea9f7ac8b8eeee53c210f28ab5c",
+  "latency_gate_pass": true,
+  "reliability_gate_pass": true,
+  "mmts_search_v1": {
+    "status": "INCOMPLETE",
+    "score": null,
+    "missing_inputs": [
+      "independent human-labelled hidden benchmark with safety subset"
+    ]
+  }
+}

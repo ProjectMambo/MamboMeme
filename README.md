@@ -1,7 +1,7 @@
 # MamboMeme
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Status-Phase_2_complete-2ea44f?style=flat-square" alt="Project status: Phase 2 complete" />
+  <img src="https://img.shields.io/badge/Status-Phase_3_complete-2ea44f?style=flat-square" alt="Project status: Phase 3 complete" />
 </p>
 
 MamboMeme is a local search application for finding existing meme images and quotes. A user searches for a name, quote, topic, or description—such as `john cena`—reviews a ranked list, and chooses the item they want.
@@ -15,7 +15,7 @@ It is a **ranked multimodal search project**, not a reply generator in its first
 | Understand the components and Rust/Python boundaries | [Architecture](docs/Architecture.md) |
 | Plan acquisition, parsing, enrichment, and storage | [Data pipeline](docs/Data%20Pipeline.md) |
 | Follow a query through ranking and selection | [Retrieval](docs/Retrieval.md) |
-| Understand the planned Rust TUI | [Interface](docs/Interface.md) |
+| Use and understand the Rust TUI | [Interface](docs/Interface.md) |
 | See the complete correctness test matrix | [Testing](docs/Testing.md) |
 | Understand metrics and the Technical Score | [Evaluation](docs/Evaluation.md) |
 | Follow the implementation order | [Roadmap](docs/Roadmap.md) |
@@ -26,7 +26,7 @@ It is a **ranked multimodal search project**, not a reply generator in its first
 |---|---|---|
 | Data processing and storage | Phase 1 complete | Validate and deduplicate a cleared local fixture, preserve provenance, build fielded FTS5, and publish a versioned corpus. |
 | Retrieval | Phase 2 complete | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
-| User interface | Phase 3 planned | Let a user search, inspect, navigate, and select results through a Rust terminal interface. |
+| User interface | Phase 3 complete | Search, inspect, navigate, open, manually copy, and select results through a Rust terminal interface. |
 | Context-aware suggestions | Future | Convert one message or a short chat into search cues, then reuse the same retrieval engine. |
 
 ## System at a glance
@@ -39,7 +39,20 @@ PHASE 4  one approved external source -> the same corpus contract
 FUTURE   bounded chat context -> search cues -> the same retrieval contract
 ```
 
-The first three phases complete the local search product. Phase 4 proves repeatable real-source ingestion. Phase 2 implements the Python worker and the shared newline-delimited JSON protocol; Phase 3 will add the Rust TUI client.
+The first three phases complete the local search product. Phase 4 proves repeatable real-source ingestion. Phase 2 implements the Python worker and shared newline-delimited JSON protocol; Phase 3 connects the Rust TUI client, terminal lifecycle, feedback log, and interface profiler.
+
+## Run the source release
+
+From the repository root, build the fixture corpus and launch the TUI:
+
+```sh
+DATA_DIR=/tmp/mambomeme-data
+cargo run --locked -- ingest --manifest tests/fixtures/corpus/manifest.jsonl --data-dir "$DATA_DIR"
+PYTHONPATH=python python3 -m mambomeme_search.build_index --data-dir "$DATA_DIR"
+cargo run --locked -- tui --data-dir "$DATA_DIR"
+```
+
+Add `--feedback` to the `tui` command only when local interaction logging is wanted. The [Interface](docs/Interface.md) document covers keys, feedback inspection/deletion, the release build, and the reproducible interface profile.
 
 ## Why evaluate hybrid search
 
@@ -54,12 +67,12 @@ The public fixture comparison did not satisfy the confidence rule, so lexical se
 
 ## Selection feedback
 
-The interface may record local, opt-in events such as which ranked item was opened or selected. These events can diagnose findability and later supply reviewed training examples, but they are not ground truth: result position and presentation strongly influence selection.
+The interface can record local, opt-in events such as open, copy, choose, reformulate, and abandon. These events can diagnose findability and later supply reviewed training examples, but they are not ground truth: result position and presentation strongly influence selection.
 
 There is no live self-training in the first release. Official quality scores always come from a frozen human-labelled benchmark.
 
 ## Current status
 
-Phases 1 and 2 are complete. The repository contains the local corpus pipeline, weighted lexical search, a small LSA dense experiment, deterministic hybrid ranking, a strict long-lived NDJSON worker, a public provisional benchmark, and offline acceptance checks. The commands in [Testing](docs/Testing.md#implemented-commands) pass from a clean working tree.
+Phases 1 through 3 are complete. The repository contains the local corpus pipeline, weighted lexical search, a small LSA dense experiment, deterministic hybrid ranking, a strict long-lived NDJSON worker, the Rust TUI, optional private local feedback, a public provisional benchmark, and offline acceptance checks. The commands in [Testing](docs/Testing.md#implemented-commands) pass from a clean working tree.
 
-The provisional report records excellent fixture retrieval but deliberately leaves MMTS-Search-v1 unscored: the human-labelled safety subset and Rust TUI submit-to-render latency do not exist yet. There is no TUI, external crawler, context assistant, public API, or deployment target. See the four substantial delivery phases in the [Roadmap](docs/Roadmap.md).
+The Phase 3 interface profile records `11.377 ms` p95 submit-to-completed-result-state latency across 1,024 measured searches with zero request errors on one declared release-mode `80×24` PTY run. MMTS-Search-v1 still has a null score and `INCOMPLETE` status because the independent human-labelled hidden benchmark with its safety subset does not exist. There is no external crawler, context assistant, public API, packaged binary distribution, or deployment target. Phase 4 is next in the [Roadmap](docs/Roadmap.md).

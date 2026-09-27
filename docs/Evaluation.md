@@ -52,7 +52,24 @@ Timings are one declared local run and will vary by machine. They measure `Searc
 
 Hybrid's overall nDCG improvement over lexical is `0.005`; its semantic-slice gain is `0.033`; its prompt-family cluster-bootstrap interval for the same macro-slice statistic is `[0.0, 0.0109]`. It misses both effect-size thresholds and the interval's lower bound is not above zero, so the worker defaults to lexical.
 
-MMTS-Search-v1 is deliberately `INCOMPLETE` for every Phase 2 route. The public fixture has no human-labelled safety/adversarial subset, and there is no Rust TUI submit-to-render measurement. Ordinary safe-list rate and in-process search latency remain diagnostics, but the evaluator assigns no aggregate score or `PASS` status until those required inputs exist.
+MMTS-Search-v1 is deliberately `INCOMPLETE` for every Phase 2 route. The public fixture has no independent human-labelled safety/adversarial subset, so the evaluator assigns no aggregate score or `PASS` status.
+
+## Implemented Phase 3 interface profile
+
+Phase 3 adds the versioned `phase3-interface.json` regression profile around the real Rust client, long-lived Python worker, and a release-mode Crossterm PTY. The checked-in local run uses `fixture-provisional-v1`, an `80×24` viewport, result limit `10`, 128 warm-ups, and 1,024 equally repeated measurements in deterministic shuffled blocks:
+
+| Metric | Result |
+|---|---:|
+| Worker startup | 75.121 ms |
+| Submit → completed result-state write p50 | 10.569 ms |
+| Submit → completed result-state write p95 | 11.377 ms |
+| Submit → completed result-state write p99 | 11.668 ms |
+| Request error rate | 0.000% |
+| Phase 3 latency/reliability gates | Pass / pass |
+
+Timing starts before the Searching-state write and ends after the completed result or error-state write. The profile includes controller-channel submission, 10 ms polling, Python search, NDJSON serialization, pipes, Rust validation, state update, and Crossterm output. It excludes physical key delivery, terminal-emulator paint/visibility, and external viewer startup. Errors are rendered and counted; timeouts are charged at least five seconds. The active snapshot is pinned and rechecked, and the report records corpus/retriever/snapshot identities, query projection, OS/architecture, build/package/protocol, minimum Rust version, Python version, `TERM`, CPU model, and dependency-lock hash. This is a local regression boundary, not a universal hardware claim or the future official hidden-test run.
+
+The report carries `mmts_search_v1.status = "INCOMPLETE"` and `score = null`. Its sole declared missing input is an independent human-labelled hidden benchmark with a safety subset. Phase 3 supplies interface latency and zero-error evidence; it does not turn the public synthetic fixture into an official quality or safety score.
 
 ## Relevance labels
 
@@ -142,7 +159,9 @@ Measure both the Python engine and the complete TUI path:
 | Memory | Loaded steady and peak resident memory |
 | Storage | SQLite, vectors, thumbnails, and total corpus bytes |
 
-The scored run uses a warm loaded process, concurrency `1`, the frozen corpus/model, result limit `10`, one declared Crossterm-compatible local PTY at `80x24`, 100 warm-ups, and at least 1,000 measured searches. Repeat every query equally in shuffled blocks with result caching disabled. Submit-to-render timing starts when the TUI accepts the submit key and stops only after the backend draws the status and complete returned list. A timeout is charged its full limit and counted as an error. Image-file opening is excluded because it measures the external viewer, not search.
+The future official scored run uses a warm loaded process, concurrency `1`, the frozen corpus/model, result limit `10`, one declared Crossterm-compatible local PTY at `80x24`, at least 100 warm-ups, and at least 1,000 measured searches. Repeat every query equally in shuffled blocks with result caching disabled. Submit-to-render timing starts when the TUI accepts the submit key and stops only after the backend completes the result-state viewport. A timeout is charged its full limit and counted as an error. Image-file opening is excluded because it measures the external viewer, not search.
+
+The implemented Phase 3 regression profile uses 128 warm-ups, 1,024 measurements, and the release-mode PTY boundary described above. It does not measure physical key delivery or terminal-emulator paint.
 
 An error is not an empty result. It receives zero relevance, exact-findability, coverage, and safety credit for that request.
 
@@ -210,11 +229,11 @@ Opt-in local interaction events can show how people use the ranked list. Only `c
 - choose rate within the top 10;
 - reciprocal chosen rank and chosen-rank distribution;
 - time from render to explicit selection;
-- preview/open/copy/choose rates;
+- open/copy/choose rates; highlight-only preview is not logged in v1;
 - reformulation and abandonment rates;
 - outcomes by query slice, corpus, retriever, and interface version.
 
-These metrics are not part of MMTS-Search-v1. Preview, open, and copy remain diagnostic actions. Rank and preview position influence behavior, unchosen results may never have been examined, and popular memes receive more familiar interactions. Never train directly on raw counts.
+These metrics are not part of MMTS-Search-v1. Preview, open, and copy remain diagnostic actions. Current events log returned rankings, not row exposure or inspection. Rank and preview position influence behavior, unchosen results may never have been examined, and popular memes receive more familiar interactions. Never train directly on raw counts.
 
 Later improvement can use reviewed selections as examples or run randomized/interleaved comparisons with logged exposure probabilities. Any learned ranker must still improve the frozen human-labelled benchmark without gate regressions.
 

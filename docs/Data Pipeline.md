@@ -12,7 +12,7 @@ The data pipeline converts permitted source material into a versioned searchable
 
 ## Pipeline
 
-Phases 1 and 2 implement the current offline path:
+Phases 1 and 2 implement the current offline corpus-build path; Phase 3 consumes the published result without changing it:
 
 ```text
 cleared local JSONL manifest + static fixture assets
@@ -22,6 +22,7 @@ cleared local JSONL manifest + static fixture assets
     -> Phase 2 Python TF-IDF/LSA experiment artifacts
     -> integrity, coverage, and checksum validation
     -> atomic active.json publication
+    -> read-only Python worker and Rust TUI
 ```
 
 Phase 2 adds a model-free TF-IDF/LSA representation and retrieval artifacts. Later phases may add resource-limited OCR or annotation where needed and finally one approved network source. These additions reuse the Phase 1 corpus contract rather than replace it.
@@ -30,9 +31,9 @@ Only one build stage writes at a time. The retrieval worker opens the published 
 
 ## Implementation status
 
-Phases 1 and 2 are complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS/LSA snapshot builder, retrieval-facing artifact validation, and offline acceptance checks are implemented and passing.
+Phases 1 through 3 are complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS/LSA snapshot builder, retrieval-facing artifact validation, read-only worker, Rust TUI consumer, and offline acceptance checks are implemented and passing.
 
-Not implemented: network acquisition, OCR, generated captions, pretrained or image embeddings, thumbnails, or interaction feedback. The current dense vectors are derived only from fixture text with TF-IDF and truncated SVD.
+Phase 3's optional interaction log is deliberately outside the corpus and snapshot directories at `<data-dir>/feedback/interaction-events.jsonl`; it cannot change index artifacts or live rankings. Not implemented: network acquisition, OCR, generated captions, pretrained or image embeddings, or thumbnails. The current dense vectors are derived only from fixture text with TF-IDF and truncated SVD.
 
 ## Source acceptance
 
