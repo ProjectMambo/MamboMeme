@@ -16,7 +16,7 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 - Phase 1 builds a deterministic local SQLite/FTS corpus from a cleared fixture.
 - Phase 2 implements BM25, a measured LSA dense experiment, deterministic hybrid fusion, evaluation, and the worker. BM25 remains the default because fusion did not pass the confidence rule.
 - Phase 3 implements a Rust TUI connected to one long-lived Python retrieval worker through a versioned local protocol.
-- Phase 4 adds one approved external source through the same corpus contract.
+- Phase 4 is adding one finite, human-reviewed Wikimedia Commons page-ID plan through the same corpus contract; it is not a general crawler.
 - Selection feedback is optional offline evidence, never live self-training.
 - Context-aware suggestions reuse retrieval only after the prompt-search product works.
 - MMTS-Search-v1, component metrics, and contract tests justify each implemented stage.
@@ -27,4 +27,4 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 
 ## Project status
 
-Phases 1 through 3 are complete. The bounded local corpus, checksummed FTS5/LSA snapshot, ranked-search routes, evaluator, strict NDJSON worker, Rust TUI, optional local feedback, PTY fixture, and interface profile pass their offline checks. Phase 4's approved external source is next. MMTS-Search-v1 remains unscored until an independent human-labelled hidden benchmark with its safety subset exists; no context assistant, public API, packaged distribution, or deployment target is implemented.
+Phases 1 through 3 are complete. Phase 4's reviewed Commons source, tombstone replay, fail-closed snapshot invalidation, and controlled network tests are in progress. MMTS-Search-v1 remains unscored until an independent human-labelled hidden benchmark with its safety subset exists; no context assistant, public API, packaged distribution, or deployment target is implemented.

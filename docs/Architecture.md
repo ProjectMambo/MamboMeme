@@ -56,7 +56,7 @@ Keep one implementation of each responsibility. Measure before moving a boundary
 
 ## Current implementation boundary
 
-Phases 1 through 3 are complete. Phase 1 established the durable corpus boundary:
+Phases 1 through 3 are complete; Phase 4 is in progress. Phase 1 established the durable corpus boundary:
 
 ```text
 cleared local JSONL manifest and static fixture assets
@@ -88,11 +88,22 @@ explicit query submission in a Ratatui/Crossterm TUI
     -> bounded shutdown and terminal restoration
 ```
 
-The initial migration, cleared fixture data, Rust command, Python builder, retrieval routes, evaluator, protocol types, worker, TUI, feedback log, profiler, unit tests, and offline cross-language fixtures are implemented. Local image ingestion still accepts PPM fixture images only; broader decoding belongs with real-source ingestion.
+Phase 4 extends only the acquisition side:
 
-There are still no network requests, OCR calls, pretrained model downloads, image embeddings, inline terminal images, platform clipboard writes, uploaded telemetry, or context processing. Those boundaries belong to later work and must not be inferred from the presence of their design documents.
+```text
+finite human-reviewed Wikimedia Commons page-ID plan
+    -> fixed Action API metadata request and verified original-media download
+    -> pinned content, identity, rights, safety, and display-metadata comparison
+    -> resumable raw/media/source-envelope staging
+    -> the existing Rust ingest and Python publication boundary
+    -> explicit tombstone or changed-rights replay invalidates active.json
+```
 
-## Full offline corpus build
+The initial migration, cleared fixture data, Rust commands, Python builder, retrieval routes, evaluator, protocol types, worker, TUI, feedback log, profiler, unit tests, and offline cross-language fixtures are implemented. Phase 4 is adding bounded static JPEG and PNG validation alongside the existing PPM fixture decoder and one concrete Commons client; it does not add a general URL fetcher.
+
+There are still no OCR calls, pretrained model downloads, image embeddings, inline terminal images, platform clipboard writes, uploaded telemetry, or context processing. The only planned network boundary is the allowlisted Commons metadata and original-media acquisition described in [Wikimedia Commons source](Wikimedia%20Commons%20Source.md).
+
+## Full corpus build
 
 ```text
 approved API or cleared local manifest
@@ -105,7 +116,7 @@ approved API or cleared local manifest
 
 The stages do not write concurrently. Rust completes its acquisition transaction before Python enrichment begins. The interactive search worker opens only the published snapshot and treats it as read-only.
 
-Phase 2 adds a model-free TF-IDF/LSA representation and retrieval. Pretrained text/image models remain later measured experiments; remote acquisition begins only in Phase 4.
+Phase 2 adds a model-free TF-IDF/LSA representation and retrieval. Pretrained text/image models remain later measured experiments; Phase 4 adds source acquisition without changing retrieval ownership.
 
 ## Interactive search — Phases 2 and 3
 
@@ -153,14 +164,17 @@ The implemented worker bounds input lines at 64 KiB and output lines at 16 MiB, 
 
 The Phase 3 Rust client validates the ready handshake, request ID, corpus/retriever versions, requested and announced routes, result count, rank sequence, safe flag, and non-empty unique result IDs. Each protocol response has a five-second timeout. The UI permits one in-flight submission, treats request validation errors as recoverable, treats worker/protocol failures as fatal, and offers at most one deliberate `r` restart per session. A stale or mismatched response is rejected before it can replace the displayed result set.
 
+Phase 4 also closes the stale-process path. The Python engine rereads the bounded active pointer before every search and requires the snapshot and dataset identities it opened. Removing `active.json` after a tombstone or serving-provenance change, or publishing another snapshot, stops that worker instead of allowing its already-open SQLite handle to continue serving stale content.
+
 ## Artifact contract
 
-The table describes the implemented local-release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; Phase 3 implements the optional interaction events.
+The table describes the shared release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; Phase 3 implements the optional interaction events; Phase 4 adds source-acquisition artifacts without making them a second canonical database.
 
 Rust and Python exchange durable, inspectable build artifacts:
 
 | Artifact | Owner | Consumer |
 |---|---|---|
+| Reviewed source plan, retained bounded API payload, cursor, and acquisition report | Rust acquisition command writes | Human review and Rust ingestion consume |
 | Content-addressed raw media | Rust writes | Python reads within the enrichment sandbox |
 | Source, rights, outcome, and processing rows in SQLite | Rust writes | Python enriches during a stopped build |
 | Ordered, language-neutral SQL migrations | Shared contract | Both apply or inspect |
@@ -171,7 +185,7 @@ Rust and Python exchange durable, inspectable build artifacts:
 
 The manifest records schema, builder, normalization, search-document, representation, NumPy and SQLite versions; canonical content identity; dense method and dimension; item/vocabulary counts; and every artifact checksum. Corpus identity is computed from a canonical ordered export rather than SQLite page bytes or timestamps. The snapshot identity also protects the derived artifact manifest.
 
-The Phase 1 portion of one fixed fixture must prove ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection:
+The Phase 1 portion of one fixed fixture proves ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection; Phase 4 adds a controlled-server acquisition and tombstone replay:
 
 ```text
 Rust fixture import
@@ -181,6 +195,7 @@ Rust fixture import
     -> both languages decode the same golden protocol messages
     -> a second build preserves content identity and ranking
     -> Phase 3 Rust TUI receives and selects the intended stable ID
+    -> Phase 4 source record enters the same index, then a tombstone invalidates publication and the rebuilt corpus excludes it
 ```
 
 ## Search request
@@ -220,13 +235,14 @@ active corpus                         checksummed manifest pointer       Phase 1
 TF-IDF/LSA experiment artifacts      NumPy matrices + ordered JSON IDs  Phase 2
 benchmark and reports                 versioned JSON/Markdown            Phase 2
 selection feedback                    optional local JSONL               Phase 3
+source plan/cursor/raw/report         versioned files in acquisition dir Phase 4
 ```
 
 Raw, canonical, and derived data are layers of one corpus, not three competing sources of truth. Derived FTS and embedding artifacts can be rebuilt. A model change produces a new manifest and never overwrites the artifacts attached to an earlier score.
 
 ## Repository shape by phase
 
-Phases 1 through 3 use this single-package shape:
+The project keeps this single-package shape through Phase 4:
 
 ```text
 README.md
@@ -237,7 +253,8 @@ rust-toolchain.toml
 migrations/
     001_initial.sql
 src/
-    main.rs                  ingest, TUI, feedback, and profile command dispatch
+    main.rs                  acquisition, ingest, TUI, feedback, and profile dispatch
+    commons.rs               one reviewed Commons acquisition path
     ingest.rs                local validation, storage, and outcomes
     protocol.rs              strict Rust NDJSON message types
     worker.rs                bounded Python process and response validation
@@ -257,6 +274,9 @@ benchmarks/
     provisional-v1.json
     reports/phase2-provisional.{json,md}
     reports/phase3-interface.json
+    reports/phase4-wikimedia.json
+examples/
+    wikimedia-commons-plan.json
 tests/
     fixtures/corpus/         cleared local manifest and assets
     fixtures/protocol/       cross-language golden messages
@@ -264,6 +284,7 @@ tests/
     test_phase1.py           offline Rust-to-Python acceptance check
     test_phase2.py           offline corpus-to-worker acceptance check
     test_phase3.py           offline PTY selection, feedback, failure, and profile
+    test_phase4.py           offline source-to-tombstone acceptance check
 data/                        ignored working and published artifacts
 ```
 
@@ -274,6 +295,9 @@ Phase 4 adds one concrete source integration. One Cargo package and one Python p
 | Failure | Required behavior |
 |---|---|
 | Invalid or rights-incomplete source item | Quarantine the item without losing the batch. |
+| Commons content, identity, dimension, or rights drift | Quarantine the new revision; tombstone a previously served revision until it is reviewed. |
+| Explicit Commons deletion or completed-plan removal | Emit a minimal tombstone, invalidate the active pointer after ingestion, then rebuild before serving. |
+| API omission, interruption, or exhausted transient failure | Preserve the cursor and prior availability; never infer a deletion. |
 | Rust/Python schema mismatch | Stop the build or worker startup. |
 | Corrupt manifest or item/vector mismatch | Refuse publication or startup. |
 | Dense artifact missing or corrupt at startup | Reject the complete Phase 2 snapshot; lexical-only degradation is allowed only for a runtime dense-route failure after successful startup. |
@@ -281,7 +305,7 @@ Phase 4 adds one concrete source integration. One Cargo package and one Python p
 | Worker crash or timeout | Preserve terminal control, show an error, and allow an explicit restart. |
 | Unsupported terminal image protocol | Use the text/metadata preview and external-open action. |
 | No eligible match | Return an empty result list. |
-| Permission revocation | Stop serving the affected snapshot until it is rebuilt without the item. |
+| Permission revocation or active-pointer change | Stop the open worker and serving snapshot until a replacement is built and the worker restarts. |
 
 ## Deferred boundary
 

@@ -71,6 +71,12 @@ Timing starts before the Searching-state write and ends after the completed resu
 
 The report carries `mmts_search_v1.status = "INCOMPLETE"` and `score = null`. Its sole declared missing input is an independent human-labelled hidden benchmark with a safety subset. Phase 3 supplies interface latency and zero-error evidence; it does not turn the public synthetic fixture into an official quality or safety score.
 
+## Phase 4 source report
+
+Phase 4 evaluates Wikimedia Commons acquisition as a pipeline boundary, separately from ranked-search quality. Its versioned report records the reviewed-plan identity, completed-scan freshness, per-outcome counts, retries, bytes, duration, sequential throughput, peak resident memory, resume/reconciliation checks, enlarged-corpus integrity, and retrieval regression. A rights, provenance, deletion, snapshot-invalidation, or artifact-integrity failure fails the phase rather than being averaged into a score.
+
+The acquisition report does not create a new MMTS input. Adding one reviewed Commons item also does not turn the public fixture labels into an independent hidden benchmark. MMTS-Search-v1 therefore remains `INCOMPLETE` with `score = null` until the required human-labelled hidden benchmark and safety subset exist.
+
 ## Relevance labels
 
 Human judges grade whether each stored item is useful for the search query:
@@ -158,6 +164,7 @@ Measure both the Python engine and the complete TUI path:
 | Throughput | Completed engine searches per second at declared concurrency |
 | Memory | Loaded steady and peak resident memory |
 | Storage | SQLite, vectors, thumbnails, and total corpus bytes |
+| Source acquisition | Completed-plan duration, items/second, retries, bytes, freshness, deletion lag, and peak RSS |
 
 The future official scored run uses a warm loaded process, concurrency `1`, the frozen corpus/model, result limit `10`, one declared Crossterm-compatible local PTY at `80x24`, at least 100 warm-ups, and at least 1,000 measured searches. Repeat every query equally in shuffled blocks with result caching disabled. Submit-to-render timing starts when the TUI accepts the submit key and stops only after the backend completes the result-state viewport. A timeout is charged its full limit and counted as an error. Image-file opening is excluded because it measures the external viewer, not search.
 

@@ -12,10 +12,11 @@ The data pipeline converts permitted source material into a versioned searchable
 
 ## Pipeline
 
-Phases 1 and 2 implement the current offline corpus-build path; Phase 3 consumes the published result without changing it:
+Phases 1 and 2 implement the corpus-build path; Phase 3 consumes the published result without changing it; Phase 4 adds one reviewed source in front of the same ingest boundary:
 
 ```text
-cleared local JSONL manifest + static fixture assets
+finite reviewed Commons plan or cleared local JSONL manifest
+    -> bounded original media + versioned JSONL source envelope
     -> Rust unresolved-manifest gate, bounded parsing, rights checks, decode, hashing, and deduplication
     -> content-addressed media + canonical/provenance SQLite rows
     -> Phase 1 Python deterministic fielded FTS5 build
@@ -25,19 +26,19 @@ cleared local JSONL manifest + static fixture assets
     -> read-only Python worker and Rust TUI
 ```
 
-Phase 2 adds a model-free TF-IDF/LSA representation and retrieval artifacts. Later phases may add resource-limited OCR or annotation where needed and finally one approved network source. These additions reuse the Phase 1 corpus contract rather than replace it.
+Phase 2 adds a model-free TF-IDF/LSA representation and retrieval artifacts. Phase 4's Wikimedia Commons source does not need OCR or generated annotation: its reviewed plan supplies the searchable fields. Any later enrichment must earn its own measured need and reuse the Phase 1 corpus contract rather than replace it.
 
 Only one build stage writes at a time. The retrieval worker opens the published snapshot read-only.
 
 ## Implementation status
 
-Phases 1 through 3 are complete. The ordered migration, cleared local fixture, Rust local ingester, Python FTS/LSA snapshot builder, retrieval-facing artifact validation, read-only worker, Rust TUI consumer, and offline acceptance checks are implemented and passing.
+Phases 1 through 3 are complete. Phase 4 is in progress. It adds a finite reviewed Wikimedia Commons page-ID plan, a hardened sequential Rust acquisition command, version-2 tombstones, JPEG/PNG validation, active-snapshot invalidation, and controlled offline source tests.
 
-Phase 3's optional interaction log is deliberately outside the corpus and snapshot directories at `<data-dir>/feedback/interaction-events.jsonl`; it cannot change index artifacts or live rankings. Not implemented: network acquisition, OCR, generated captions, pretrained or image embeddings, or thumbnails. The current dense vectors are derived only from fixture text with TF-IDF and truncated SVD.
+Phase 3's optional interaction log is deliberately outside the corpus and snapshot directories at `<data-dir>/feedback/interaction-events.jsonl`; it cannot change index artifacts or live rankings. Not implemented: OCR, generated captions, pretrained or image embeddings, or thumbnails. The current dense vectors are derived only from stored text fields with TF-IDF and truncated SVD.
 
 ## Source acceptance
 
-Start with a manually curated manifest and assets whose storage and use are known. Add one external source only after the local vertical slice works.
+Start with a manually curated manifest and assets whose storage and use are known. The first external source is a finite human-reviewed Wikimedia Commons plan, not a category crawler. Its complete contract is in [Wikimedia Commons source](Wikimedia%20Commons%20Source.md).
 
 Every source configuration must record:
 
@@ -51,7 +52,7 @@ Every source configuration must record:
 
 A URL exposed by an API is not proof that its contents may be copied or redistributed. Rights-incomplete items are recorded and quarantined, never published.
 
-Potential sources must be evaluated individually. Useful starting points include the [Wikimedia Commons API](https://commons.wikimedia.org/wiki/Commons:API) and [Openverse API](https://docs.openverse.org/), but every imported item still needs its own licence and attribution evidence. Reddit, Imgflip, GIPHY, Tenor, and Know Your Meme have distinct API, storage, ranking, or automated-access restrictions; none is a default crawler target.
+Potential sources must be evaluated individually. Phase 4 approves only the [Wikimedia Commons API](https://commons.wikimedia.org/wiki/Commons:API), and every planned item still needs its own pinned licence and attribution evidence. Reddit, Openverse, Imgflip, GIPHY, Tenor, and Know Your Meme have distinct API, storage, ranking, or automated-access restrictions; none is implemented or a default crawler target.
 
 ## Data layers
 
@@ -65,7 +66,7 @@ These are layers of one corpus. Only canonical records are authoritative; the se
 
 ## Source envelope
 
-Each adapter maps input into the same bounded envelope without inventing missing source evidence:
+Each source integration maps input into the same bounded envelope without inventing missing source evidence:
 
 | Field | Contract |
 |---|---|
@@ -82,7 +83,9 @@ Each adapter maps input into the same bounded envelope without inventing missing
 | `creator`, `licence`, `permission`, `attribution` | Rights evidence required by the source policy. |
 | `retention_policy`, `redistribution_policy` | What may be stored and shown. |
 
-Phase 1 rejects unknown manifest fields instead of silently discarding them. A later source adapter may retain additional provider fields in its bounded raw payload when policy permits. The canonical mapping records whether each derived value came from the source, a model, or human review.
+Phase 1 rejects unknown manifest fields instead of silently discarding them. Phase 4 retains the bounded Commons API response separately and maps only declared envelope fields. The canonical mapping records whether each value came from the source, a model, or human review.
+
+Schema version `2` adds one deliberately small deletion form. A tombstone is exactly `schema_version`, `source`, `source_item_id`, `source_url`, `fetched_at`, and `deleted: true`; content, rights, safety, and asset fields are forbidden. Ordinary version-1 and version-2 records keep the existing complete contract. This makes deletion explicit rather than overloading a missing or incomplete ordinary record.
 
 ## Rust trust-boundary parsing
 
@@ -93,7 +96,7 @@ The local ingester resolves every attempted fixture item to an explicit outcome:
 1. Parse a bounded record and dispatch on `kind`; quarantine unknown kinds.
 2. Resolve local paths beneath a configured root without following an escape outside it.
 3. Enforce record-byte and decoded-image dimension limits.
-4. For images, compare the declared type with magic-byte detection and a bounded static PPM decode; broader formats are deferred until a real source requires them.
+4. For images, compare the declared type with magic-byte detection and bounded static PPM, JPEG, or PNG decoding; reject animation, malformed data, and dimensions over the configured limit.
 5. For text-only items, require bounded valid Unicode and do not run media checks.
 6. Require stable source identity and complete rights, retention, redistribution, safety, and review evidence.
 7. Calculate a domain-separated SHA-256 digest over the original UTF-8 text or media bytes.
@@ -103,9 +106,9 @@ No Phase 1 code accepts a URL as media input or performs a network request.
 
 ### Phase 4 remote boundary
 
-The first approved external source extends the same outcome model. It must allow only `http` or `https` requests to source-policy allowlisted hosts, resolve and reject private, loopback, link-local, and otherwise forbidden addresses, connect to the validated address, and repeat validation after every redirect. It must also enforce request time, redirect, response-byte, retry, and cursor limits.
+The first approved external source extends the same outcome model. Production accepts only HTTPS requests to the fixed Commons API and original-media host/path, resolves and rejects private, loopback, link-local, multicast, unspecified, and other forbidden addresses, pins the validated addresses for connection, and repeats URL and address validation after every manually followed redirect. It disables ambient proxies and automatic redirects/retries, caps redirects and attempts at three, applies five-second connect and twenty-second request deadlines, and caps API and media bodies at 1 MiB and 16 MiB respectively.
 
-Use one reused synchronous HTTP client first. A rate-limited source does not justify an async runtime or generic adapter framework.
+The command sends serial requests with a required contact `User-Agent`, MediaWiki `maxlag=5`, bounded `Retry-After` handling, and a durable plan-hash cursor. Use one reused synchronous HTTP client. A rate-limited source does not justify an async runtime or generic adapter framework.
 
 ## Outcomes and retries
 
@@ -116,10 +119,12 @@ Use one reused synchronous HTTP client first. A rate-limited source does not jus
 | `duplicate` | Existing canonical content with new provenance | Attach the provenance record |
 | `retryable` | Timeout, rate limit, transient DNS failure, or provider `5xx` | Bounded backoff without advancing past the item |
 | `quarantined` | Invalid schema, forbidden target, MIME/decode failure, missing rights, or policy failure | Retain reason for review |
-| `deleted` | Provider deletion or permission revocation | Invalidate affected snapshots and rebuild |
+| `deleted` | Explicit provider deletion, reviewed-plan removal, or permission revocation | Detach provenance, invalidate affected snapshots, and rebuild |
 | `fatal_batch` | Schema mismatch, corrupt state, invalid configuration, or failed publication | Stop without advancing the cursor |
 
 A fatal error, read failure, database failure, or process interruption rolls back the whole manifest transaction, so no valid prefix can later become publishable. It also leaves an unresolved marker keyed to the canonical manifest path. Until that same path succeeds, a different manifest cannot ingest and Python cannot publish; this prevents unrelated work from reviving stale content after a failed rights change. The separate failed-run audit row records the attempted outcome counts without making its items visible. A rerun of the fixed fixture must preserve canonical IDs, content checksums, and outcome counts without creating duplicate search items.
+
+Commons acquisition has its own earlier durability boundary: each verified API payload, media file, and mapped record is atomically written and directory-synced before its plan cursor advances. The plan-removal reconciliation runs only after every remaining item completes, so an interrupted or partial scan cannot invent deletions. The resulting manifest still enters the whole-manifest SQLite transaction above.
 
 ## Canonical storage
 
@@ -133,6 +138,8 @@ Ordered language-neutral SQL migrations define four initial entities:
 | `processing_run` | Stage, input/output versions, cursor, timestamps, outcome counts, tool/model versions, and error summary |
 
 Identical domain-separated content shares one `meme_item` while retaining every provenance row. Identical image bytes also share one media object. A perceptual hash proposes near-duplicate or template groups for review; it never deletes visually similar variants automatically.
+
+A tombstone detaches its `source_item` from the canonical item and marks the canonical item unavailable only when no other serving provenance remains. Replaying the same tombstone is state-idempotent. Any committed accepted, duplicate, deleted, or quarantined change that may alter serving provenance removes and directory-syncs `active.json`; publication must run again before a worker can serve.
 
 Searchable fields remain separate in canonical storage. Do not flatten title, people, template, tags, OCR, caption, and descriptions until building the derived search document; retrieval needs their identity and weights.
 
@@ -205,7 +212,7 @@ Python builds a complete candidate snapshot in a versioned staging directory. Be
 4. verify every checksum and the Phase 2 item/vector alignment, shape, finite-value, and norm invariants;
 5. sync the completed snapshot directory before atomically replacing and directory-syncing the active-manifest pointer.
 
-A pre-replacement failure leaves the previous snapshot untouched. The pointer rename is the commit point; a following directory-sync failure is reported as “publication durability unknown” because the new pointer may already be visible and must not be described as rolled back. A deletion or permission revocation invalidates any active snapshot containing the item; v1 stops search, rebuilds a serving snapshot with neither the item nor its ineligible provenance, and resumes only after the replacement is published. Permitted raw-layer retention is governed separately by the source policy. This avoids maintaining a second mutable suppression system.
+A pre-replacement failure leaves the previous snapshot untouched. The pointer rename is the commit point; a following directory-sync failure is reported as “publication durability unknown” because the new pointer may already be visible and must not be described as rolled back. A deletion, rights drift, or serving-provenance change invalidates the active pointer; v1 stops search, rebuilds a serving snapshot without ineligible data, and resumes only after the replacement is published and workers restart. Permitted raw-layer retention is governed separately by the source policy. This avoids maintaining a second mutable suppression system.
 
 ## Pipeline measurements
 
@@ -219,5 +226,7 @@ Pipeline health is reported separately from search quality:
 - quarantine, retry exhaustion, near-duplicate, and deletion-lag counts;
 - accepted items per second, p95 item time, total CPU time, and peak memory;
 - corpus size, SQLite size, vector size, and rebuild duration.
+
+The Commons report additionally records plan identity and scan freshness, outcome counts, retries, downloaded bytes, duration, sequential throughput, peak memory, and resume/reconciliation evidence. A deletion-lag observation is measured from the source timestamp visible to the integration through completed ingestion and publication; it is not a promise of real-time source monitoring.
 
 Rights or integrity failures block publication. Averaging them into a Technical Score would hide a broken corpus.

@@ -130,6 +130,8 @@ The worker response also includes `truncated`. When a 50-result response would e
 
 The Phase 3 TUI requests one cue, the default lexical route, and at most ten results. It validates the result envelope in Rust, shows a ranked list and metadata preview, and returns the explicitly selected stable ID as JSON after restoring the terminal.
 
+Phase 4 does not add another ranking path. A Commons record becomes an ordinary eligible corpus item only after reviewed acquisition, Rust ingestion, and a new Python snapshot publication. Before every search, an already-open engine rechecks `active.json` and requires the snapshot and dataset identities it loaded. Tombstone ingestion removes that pointer, while a later rebuild changes it; either condition fails the old worker closed so removed content cannot remain searchable through an open SQLite handle.
+
 ## Interaction feedback
 
 An interaction event may be recorded locally when the user explicitly enables feedback. Its action is one of `open`, `copy`, `choose`, `reformulate`, or `abandon`. Highlight/preview movement is not logged. `open` is recorded only after the platform opener launches, although the later viewer outcome is unknowable. `copy` records the manual-copy notice because v1 does not write to the clipboard. Only `choose` is the v1 success signal.

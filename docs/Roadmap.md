@@ -10,7 +10,7 @@ order: 70
 
 MamboMeme is built in four substantial phases. Each phase leaves a useful, executable system and closes only after its acceptance checks pass. Context-aware suggestions remain future work outside these four phases.
 
-Phases 1 through 3 are complete. The repository now has the local corpus, ranked retrieval, evaluator, long-lived worker, Rust TUI, optional private feedback, PTY acceptance path, and interface profile. Phase 4's single approved external source is next.
+Phases 1 through 3 are complete. The repository has the local corpus, ranked retrieval, evaluator, long-lived worker, Rust TUI, optional private feedback, PTY acceptance path, and interface profile. Phase 4's single approved Wikimedia Commons source is in progress.
 
 ## Phase 1: Executable local corpus
 
@@ -88,21 +88,24 @@ Mouse support, themes, a GUI, uploaded telemetry, and context-aware replies do n
 
 ## Phase 4: One approved external source
 
-**Status: next.**
+**Status: in progress.**
 
 Replace the local-only acquisition boundary with one real, policy-reviewed source while preserving the same canonical corpus contract.
 
 Deliver:
 
-- one approved external source integration, without a generic adapter hierarchy;
+- one finite human-reviewed Wikimedia Commons page-ID plan, without a category crawler or generic adapter hierarchy;
 - documented API/automation permission, retention, redistribution, attribution, indexing, deletion, and takedown rules;
-- allowlisted and pinned-address requests, redirect validation, response limits, rate limiting, bounded retries, and resumable cursors;
-- source-specific update and deletion handling;
-- resource-limited OCR or annotation only where the source needs it;
+- fixed Action API and original-media hosts, pinned-address requests, redirect validation, response limits, serial rate behavior, bounded retries, and a durable plan-hash cursor;
+- per-item pinned content, identity, dimensions, licence, attribution, safety, and search/display metadata;
+- explicit version-2 tombstones, complete-scan plan reconciliation, active-pointer invalidation, and stale-worker rejection;
+- bounded static JPEG/PNG validation; no OCR or generated annotation because this reviewed source slice does not need it;
 - corpus freshness, deletion lag, throughput, failure, and resource reports;
 - offline network-boundary tests using a controlled local server and resolver stub.
 
-Exit when interruption and rerun cannot duplicate or skip serving records, one bad item cannot lose the batch, a rights or permission change removes an item predictably, and the enlarged corpus still passes retrieval, safety, latency, and integrity gates.
+Exit when interruption and rerun cannot duplicate or skip serving records, one bad item cannot lose the batch, omissions and partial scans cannot invent deletions, a rights or permission change removes an item predictably, an open worker cannot serve the invalidated snapshot, and the enlarged corpus still passes retrieval, safety, latency, and integrity gates.
+
+The source contract and policy are documented in [Wikimedia Commons source](Wikimedia%20Commons%20Source.md). Do not mark this phase complete until the full release checks and versioned source report are recorded there and in [Testing](Testing.md).
 
 Extract shared source-adapter code only after a second approved source exposes real duplication.
 

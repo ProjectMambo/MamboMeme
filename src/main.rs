@@ -14,15 +14,35 @@ use std::io;
 use std::path::PathBuf;
 
 fn main() {
-    if let Err(error) = run() {
+    if let Err(error) = run(env::args().skip(1)) {
         eprintln!("mambomeme: {error}");
-        std::process::exit(1);
+        std::process::exit(error_exit_code(error.as_ref()));
     }
 }
 
-fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let mut args = env::args().skip(1);
-    match args.next().as_deref() {
+fn run(args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let mut args = args.peekable();
+    let command = args.next();
+    match command.as_deref() {
+        Some("-h" | "--help") => {
+            println!("{}", usage());
+            return Ok(());
+        }
+        Some("-V" | "--version") => {
+            println!("mambomeme {}", env!("CARGO_PKG_VERSION"));
+            return Ok(());
+        }
+        _ => {}
+    }
+    if matches!(
+        command.as_deref(),
+        Some("ingest" | "tui" | "feedback" | "profile")
+    ) && matches!(args.peek().map(String::as_str), Some("-h" | "--help"))
+    {
+        println!("{}", usage());
+        return Ok(());
+    }
+    match command.as_deref() {
         Some("ingest") => run_ingest(args),
         Some("tui") => run_tui(args),
         Some("feedback") => run_feedback(args),
@@ -158,9 +178,43 @@ fn option_value(
 }
 
 fn usage() -> &'static str {
-    "usage:\n  mambomeme ingest --manifest PATH --data-dir DIR\n  mambomeme tui --data-dir DIR [--python PATH] [--feedback]\n  mambomeme feedback inspect|delete --data-dir DIR\n  mambomeme profile --data-dir DIR --benchmark PATH --output PATH [--python PATH] [--warmups N] [--measurements N]"
+    "usage:\n  mambomeme ingest --manifest PATH --data-dir DIR\n  mambomeme tui --data-dir DIR [--python PATH] [--feedback]\n  mambomeme feedback inspect|delete --data-dir DIR\n  mambomeme profile --data-dir DIR --benchmark PATH --output PATH [--python PATH] [--warmups N] [--measurements N]\n\noptions:\n  -h, --help     show this help and exit\n  -V, --version  show the package version and exit"
 }
 
 fn invalid_input(message: impl Into<String>) -> Box<dyn Error + Send + Sync> {
     Box::new(io::Error::new(io::ErrorKind::InvalidInput, message.into()))
+}
+
+fn error_exit_code(error: &(dyn Error + Send + Sync + 'static)) -> i32 {
+    if error
+        .downcast_ref::<io::Error>()
+        .is_some_and(|error| error.kind() == io::ErrorKind::InvalidInput)
+    {
+        2
+    } else {
+        1
+    }
+}
+
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+
+    #[test]
+    fn help_and_version_are_successful() {
+        for arguments in [
+            ["--help"].as_slice(),
+            ["--version"].as_slice(),
+            ["ingest", "--help"].as_slice(),
+        ] {
+            assert!(run(arguments.iter().map(|value| (*value).to_owned())).is_ok());
+        }
+    }
+
+    #[test]
+    fn invalid_usage_exits_two_and_runtime_errors_exit_one() {
+        let usage_error = run(std::iter::empty()).unwrap_err();
+        assert_eq!(error_exit_code(usage_error.as_ref()), 2);
+        assert_eq!(error_exit_code(&io::Error::other("runtime failure")), 1);
+    }
 }
