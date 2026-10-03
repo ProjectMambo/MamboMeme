@@ -21,9 +21,13 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 - Context-aware suggestions reuse retrieval only after the prompt-search product works.
 - MMTS-Search-v1, component metrics, and contract tests justify each implemented stage.
 
-## Documentation
+## Understand the system and corpus
 
-::children{view="list" sort="order" direction="asc" show=["title","description"]}
+::children{include=["[[Architecture]]","[[Data Pipeline]]","[[Wikimedia Commons Source]]","[[Retrieval]]","[[Interface]]"] view="list" sort="order" direction="asc" show=["title","description"]}
+
+## Validate and plan delivery
+
+::children{include=["[[Testing]]","[[Evaluation]]","[[Roadmap]]"] view="list" sort="order" direction="asc" show=["title","description"]}
 
 ## Project status
 
