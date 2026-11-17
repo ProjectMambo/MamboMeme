@@ -31,9 +31,9 @@ Do not add a large test framework before the built-in runners become insufficien
 | Phase 1 — executable local corpus | Local parsing and paths, static-image validation, rights, hashes, exact deduplication, provenance, SQL migrations, FTS construction, checksums, idempotence, and publication rollback |
 | Phase 2 — retrieval and evaluation | Query validation, BM25, dense experiment, hybrid fusion, filters, protocol, evaluator math, benchmark integrity, retrieval latency, and error analysis |
 | Phase 3 — TUI and release | State/rendering, keys, preview and explicit selection, worker lifecycle, interaction events, PTY restoration, submit-to-render latency, and full end to end |
-| Phase 4 — approved external source | URL and address policy, redirects, HTTP limits, retries, cursor resume, source updates/deletions, throughput, and deletion lag |
+| Paused Phase 4 — approved external source | Planned URL and address policy, redirects, HTTP limits, retries, cursor resume, source updates/deletions, throughput, and deletion lag |
 
-Tests are added in their owning phase. Phases 1 through 3 are implemented; Phase 4's controlled network and tombstone cases are in progress. The independent human-labelled hidden benchmark remains a future contract.
+Tests are added in their owning stage. Phases 1 through 3 are implemented and form the paused baseline. Phase 4's controlled network, deletion, stale-process, and source-report cases are planned but not present. The independent human-labelled hidden benchmark remains a future contract.
 
 ## Implemented commands
 
@@ -51,12 +51,11 @@ Run the complete Phase 1 corpus path and Phase 2 retrieval path:
 python3 tests/test_phase1.py
 python3 tests/test_phase2.py
 PYTHONPATH=python python3 tests/test_phase3.py
-python3 tests/test_phase4.py
 ```
 
-The acceptance scripts create isolated temporary directories. Phase 1 imports twice, publishes, checks the FTS row for `john cena`, and proves deterministic corpus identity. Phase 2 imports, builds FTS/LSA artifacts, searches `john cena`, evaluates all three routes, exercises the real worker handshake/search/shutdown sequence, and removes the data. Phase 3 builds the Rust binary, launches the real TUI in an `80×24` PTY, selects the expected stable ID, inspects and deletes an opted-in event, proves immediate feedback disable and malformed-log isolation, exercises a fatal worker-output path, verifies terminal restoration, and produces success and all-error 1,024-measurement interface profiles. Phase 4 extends the offline fixture through a Commons-shaped version-2 record, publication, search, tombstone ingestion, stale-worker rejection, rebuild, and confirmed removal.
+The three acceptance scripts create isolated temporary directories. Phase 1 imports twice, publishes, checks the FTS row for `john cena`, and proves deterministic corpus identity. Phase 2 imports, builds FTS/LSA artifacts, searches `john cena`, evaluates all three routes, exercises the real worker handshake/search/shutdown sequence, and removes the data. Phase 3 builds the Rust binary, launches the real TUI in an `80×24` PTY, selects the expected stable ID, inspects and deletes an opted-in event, proves immediate feedback disable and malformed-log isolation, exercises a fatal worker-output path, verifies terminal restoration, and produces success and all-error 1,024-measurement interface profiles.
 
-At Phase 3 close these commands pass with twenty-eight Rust tests and twenty-seven Python unit tests. Phase 4's final count and report are recorded only after its full acceptance run. Clippy runs with warnings denied; all standalone acceptance scripts remain offline. `cargo fmt --all -- --check`, Python byte-compilation, and `git diff --check` are release hygiene checks.
+The paused baseline passes thirty Rust tests and twenty-seven Python unit tests; Phase 3 originally closed before two later CLI-contract tests were added. Clippy runs with warnings denied, and all three standalone acceptance scripts remain offline. `cargo fmt --all -- --check`, Python byte-compilation, and `git diff --check` are release hygiene checks. A resumed Phase 4 must add its acceptance script, final count, and report in one completed stage.
 
 ## Ingestion matrix — Phases 1 and 4
 
@@ -75,7 +74,7 @@ At Phase 3 close these commands pass with twenty-eight Rust tests and twenty-sev
 
 Local record, path, image, text, rights, identity, durability, and outcome cases begin in Phase 1. Network and HTTP cases belong to Phase 4. Network security tests use a controlled local server and resolver stub; they never contact public sources.
 
-The Phase 4 Rust cases exercise the fixed Commons endpoint, required contact identity, plan bounds and pinned metadata, allowed and forbidden resolution, redirect revalidation, bounded bodies, retry exhaustion, API mapping, durable cursor resume, complete-scan removal reconciliation, and bounded JPEG/PNG decoding. Explicit missing pages may tombstone; omissions, top-level API errors, and interrupted scans may not. A separate opt-in live smoke may confirm the reviewed example against Commons, but it is not part of the deterministic test suite.
+The planned Phase 4 Rust cases exercise the fixed Commons endpoint, required contact identity, plan bounds and pinned metadata, allowed and forbidden resolution, redirect revalidation, bounded bodies, retry exhaustion, API mapping, durable cursor resume, complete-scan removal reconciliation, and bounded JPEG/PNG decoding. Explicit missing pages may become deletion records; omissions, top-level API errors, and interrupted scans may not. A separate opt-in live smoke may confirm a reviewed example against Commons, but it cannot replace the deterministic suite.
 
 ## Enrichment and artifact matrix — Phases 1, 2, and 4
 
@@ -125,7 +124,7 @@ The implemented Phase 2 suites also cover:
 - corrupt, missing, extra, or version-incompatible artifacts causing startup failure rather than changed rankings;
 - errors receiving no empty-result or safety credit.
 
-The larger human benchmark must add explicit route-weight/depth/threshold boundary analysis and deleted/unsafe hard-negative cases before the first complete score. Phase 4 separately verifies that an engine opened before `active.json` is removed or replaced rejects its next search rather than returning a stale row.
+The larger human benchmark must add explicit route-weight/depth/threshold boundary analysis and deleted/unsafe hard-negative cases before the first complete score. A resumed Phase 4 must separately verify that an engine opened before serving state is removed or replaced rejects its next search rather than returning a stale row.
 
 ## Protocol matrix — Phase 2
 
@@ -206,18 +205,18 @@ published Phase 1 snapshot
     -> clean exit restores the terminal
 ```
 
-Phase 4 adds another offline sequence:
+Phase 4 must add this offline sequence before it can close:
 
 ```text
 Commons-shaped reviewed source record and bounded image
     -> Rust accepts the item through the shared manifest contract
     -> Python publishes and retrieval finds the planned search metadata
-    -> version-2 tombstone ingestion removes active.json
+    -> explicit deletion ingestion invalidates serving state
     -> already-open retrieval fails closed
     -> rebuild publishes a corpus without that source item
 ```
 
-The fixtures always run offline. Phase 1 must reproduce canonical content identity and FTS rows; Phase 2 adds stable rankings; Phase 3 adds stable selection and terminal restoration; Phase 4 adds explicit source-removal and stale-process safety.
+The implemented fixtures always run offline. Phase 1 reproduces canonical content identity and FTS rows; Phase 2 adds stable rankings; Phase 3 adds stable selection and terminal restoration. Phase 4's explicit source-removal and stale-process safety fixture remains planned.
 
 ## Performance regression checks — Phases 2 through 4
 
@@ -232,7 +231,7 @@ The complete planned performance profile measures:
 - ingestion items per second, p95 item time, and peak memory;
 - full and incremental rebuild duration.
 
-Phase 3 implements a release-mode Crossterm PTY profile at an `80x24` viewport and result limit `10`: 128 warm-ups, 1,024 measurements, equally repeated queries in deterministic shuffled blocks, and result caching disabled. Timing spans the Searching-state write through the completed result/error-state write and includes the controller channel, 10 ms polling, worker protocol, validation, and Crossterm output. The report pins corpus/retriever/snapshot identities, records environment provenance, counts request errors, and charges timeouts at least five seconds. Physical key delivery and terminal-emulator paint remain outside that interface boundary. Phase 4 reports source-acquisition duration, sequential throughput, retries, bytes, freshness, and peak memory separately, along with corpus size and search-regression evidence.
+Phase 3 implements a release-mode Crossterm PTY profile at an `80x24` viewport and result limit `10`: 128 warm-ups, 1,024 measurements, equally repeated queries in deterministic shuffled blocks, and result caching disabled. Timing spans the Searching-state write through the completed result/error-state write and includes the controller channel, 10 ms polling, worker protocol, validation, and Crossterm output. The report pins corpus/retriever/snapshot identities, records environment provenance, counts request errors, and charges timeouts at least five seconds. Physical key delivery and terminal-emulator paint remain outside that interface boundary. A future Phase 4 report must add source-acquisition duration, sequential throughput, retries, bytes, freshness, peak memory, corpus size, and search-regression evidence.
 
 ## Phase gates
 
@@ -241,6 +240,6 @@ Phase 3 implements a release-mode Crossterm PTY profile at an `80x24` viewport a
 | Phase 1 | Rust and Python suites; local ingestion/build integration; idempotence; quarantine and duplicate outcomes; FTS coverage; checksum stability; publication rollback |
 | Phase 2 | Phase 1 regression; protocol and retrieval suites; evaluator fixtures; provisional public benchmark; BM25/dense/hybrid comparison; explicit semantic decision; MMTS readiness remains incomplete |
 | Phase 3 source release | Phase 2 regression; TUI state/rendering; worker lifecycle; interaction privacy; offline full fixture; PTY restoration; interface profile; MMTS explicitly remains incomplete without hidden human safety labels |
-| Phase 4 | First-release regression on the enlarged corpus; external-source contract; controlled network security; resume/retry; update/deletion; throughput and resource report |
+| Paused Phase 4 | Required on resume: enlarged-corpus regression; external-source contract; controlled network security; resume/retry; update/deletion; throughput and resource report |
 
 Rights, provenance, safety, and artifact-integrity violations block every phase. A later phase never weakens an earlier phase's gate.

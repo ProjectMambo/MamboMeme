@@ -36,7 +36,7 @@ For `john cena`, the engine should surface assets whose title, people, template,
 
 The first three components form the first useful release. The fourth reuses them later; it is not a dependency of the search product.
 
-Delivery uses four implementation phases rather than one phase per product component: Phase 1 creates an executable local corpus, Phase 2 creates ranked retrieval and evaluation, Phase 3 creates the TUI and first release, and Phase 4 adds one approved external source. See the [Roadmap](Roadmap.md).
+Delivery uses four implementation stages rather than one stage per product component: Stage 1 creates an executable local corpus, Stage 2 creates ranked retrieval and evaluation, Stage 3 creates the TUI source release, and the paused Stage 4 would add one approved external source. See the [Development plan](Development%20Plan.md).
 
 ## Language ownership
 
@@ -44,7 +44,7 @@ The full system keeps one owner for each responsibility:
 
 | Rust application | Python search package |
 |---|---|
-| Source acquisition, first-pass trust-boundary validation, hashing, provenance, exact deduplication, staging, terminal lifecycle, TUI state, result presentation, and optional local interaction-event capture | Resource-limited OCR and annotations, search-document construction, embeddings, FTS and dense retrieval, rank fusion, filters, evaluation, and the long-lived search worker |
+| Local intake, first-pass trust-boundary validation, hashing, provenance, exact deduplication, staging, terminal lifecycle, TUI state, result presentation, and optional local interaction-event capture | Search-document construction, FTS and dense retrieval, rank fusion, filters, evaluation, and the long-lived search worker |
 
 Rust is useful for a distributable terminal program, careful handling of source bytes, and systems practice. Python keeps the ML ecosystem close to the model and evaluation code. This split is not a blanket claim that Rust makes every operation faster:
 
@@ -56,7 +56,7 @@ Keep one implementation of each responsibility. Measure before moving a boundary
 
 ## Current implementation boundary
 
-Phases 1 through 3 are complete; Phase 4 is in progress. Phase 1 established the durable corpus boundary:
+Stages 1 through 3 are complete and the project is paused. Stage 1 established the durable corpus boundary:
 
 ```text
 cleared local JSONL manifest and static fixture assets
@@ -88,7 +88,7 @@ explicit query submission in a Ratatui/Crossterm TUI
     -> bounded shutdown and terminal restoration
 ```
 
-Phase 4 extends only the acquisition side:
+The paused Stage 4 design would extend only the acquisition side:
 
 ```text
 finite human-reviewed Wikimedia Commons page-ID plan
@@ -99,24 +99,24 @@ finite human-reviewed Wikimedia Commons page-ID plan
     -> explicit tombstone or changed-rights replay invalidates active.json
 ```
 
-The initial migration, cleared fixture data, Rust commands, Python builder, retrieval routes, evaluator, protocol types, worker, TUI, feedback log, profiler, unit tests, and offline cross-language fixtures are implemented. Phase 4 is adding bounded static JPEG and PNG validation alongside the existing PPM fixture decoder and one concrete Commons client; it does not add a general URL fetcher.
+The initial migration, cleared fixture data, Rust commands, Python builder, retrieval routes, evaluator, protocol types, worker, TUI, feedback log, profiler, unit tests, and Phase 1–3 offline cross-language fixtures are implemented. The Commons client, JPEG/PNG intake, deletion records, stale-worker protection, controlled network tests, and source report are not released.
 
-There are still no OCR calls, pretrained model downloads, image embeddings, inline terminal images, platform clipboard writes, uploaded telemetry, or context processing. The only planned network boundary is the allowlisted Commons metadata and original-media acquisition described in [Wikimedia Commons source](Wikimedia%20Commons%20Source.md).
+There are no network requests, OCR calls, pretrained model downloads, image embeddings, inline terminal images, platform clipboard writes, uploaded telemetry, or context processing. The only planned network boundary is the allowlisted Commons metadata and original-media acquisition described in [Wikimedia Commons source](Wikimedia%20Commons%20Source.md).
 
 ## Full corpus build
 
 ```text
-approved API or cleared local manifest
-    -> Rust fetches or reads, validates, hashes, deduplicates, and stages
+cleared local manifest
+    -> Rust reads, validates, hashes, deduplicates, and stages
     -> raw content-addressed assets + SQLite provenance rows
     -> Python performs constrained OCR and enrichment only when a source needs them
     -> Python builds fielded FTS documents and declared dense representations
     -> Python validates and atomically publishes a corpus snapshot
 ```
 
-The stages do not write concurrently. Rust completes its acquisition transaction before Python enrichment begins. The interactive search worker opens only the published snapshot and treats it as read-only.
+The stages do not write concurrently. Rust completes its local-ingest transaction before Python index construction begins. The interactive search worker opens only the published snapshot and treats it as read-only.
 
-Phase 2 adds a model-free TF-IDF/LSA representation and retrieval. Pretrained text/image models remain later measured experiments; Phase 4 adds source acquisition without changing retrieval ownership.
+Phase 2 adds a model-free TF-IDF/LSA representation and retrieval. Pretrained text/image models remain later measured experiments; a resumed Stage 4 must add source acquisition without changing retrieval ownership.
 
 ## Interactive search — Phases 2 and 3
 
@@ -164,17 +164,17 @@ The implemented worker bounds input lines at 64 KiB and output lines at 16 MiB, 
 
 The Phase 3 Rust client validates the ready handshake, request ID, corpus/retriever versions, requested and announced routes, result count, rank sequence, safe flag, and non-empty unique result IDs. Each protocol response has a five-second timeout. The UI permits one in-flight submission, treats request validation errors as recoverable, treats worker/protocol failures as fatal, and offers at most one deliberate `r` restart per session. A stale or mismatched response is rejected before it can replace the displayed result set.
 
-Phase 4 also closes the stale-process path. The Python engine rereads the bounded active pointer before every search and requires the snapshot and dataset identities it opened. Removing `active.json` after a tombstone or serving-provenance change, or publishing another snapshot, stops that worker instead of allowing its already-open SQLite handle to continue serving stale content.
+The paused Stage 4 must also close the stale-process path. Its planned worker check rereads the bounded active pointer before each search so a deletion, rights change, or replacement snapshot cannot leave an already-open SQLite handle serving removed content. This is an acceptance requirement, not current Phase 3 behavior.
 
 ## Artifact contract
 
-The table describes the shared release contract. Phases 1 and 2 implement the raw-media, SQLite, migration, published-manifest, FTS, and LSA rows; Phase 3 implements the optional interaction events; Phase 4 adds source-acquisition artifacts without making them a second canonical database.
+The table separates the released contract from planned artifacts. Phases 1 and 2 implement local media, SQLite, migrations, the published manifest, FTS, and LSA artifacts; Phase 3 implements optional interaction events. Stage 4 acquisition artifacts remain planned and must not become a second canonical database.
 
 Rust and Python exchange durable, inspectable build artifacts:
 
 | Artifact | Owner | Consumer |
 |---|---|---|
-| Reviewed source plan, retained bounded API payload, cursor, and acquisition report | Rust acquisition command writes | Human review and Rust ingestion consume |
+| Reviewed source plan, retained bounded API payload, cursor, and acquisition report — planned Stage 4 | Future Rust acquisition command writes | Human review and Rust ingestion consume |
 | Content-addressed raw media | Rust writes | Python reads within the enrichment sandbox |
 | Source, rights, outcome, and processing rows in SQLite | Rust writes | Python enriches during a stopped build |
 | Ordered, language-neutral SQL migrations | Shared contract | Both apply or inspect |
@@ -185,7 +185,7 @@ Rust and Python exchange durable, inspectable build artifacts:
 
 The manifest records schema, builder, normalization, search-document, representation, NumPy and SQLite versions; canonical content identity; dense method and dimension; item/vocabulary counts; and every artifact checksum. Corpus identity is computed from a canonical ordered export rather than SQLite page bytes or timestamps. The snapshot identity also protects the derived artifact manifest.
 
-The Phase 1 portion of one fixed fixture proves ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection; Phase 4 adds a controlled-server acquisition and tombstone replay:
+The Phase 1 portion of one fixed fixture proves ingestion, outcomes, publication, and reproducibility. Phases 2 and 3 extend the same fixture through retrieval and selection. A resumed Stage 4 must add a controlled-server acquisition and deletion replay after the released sequence:
 
 ```text
 Rust fixture import
@@ -195,7 +195,11 @@ Rust fixture import
     -> both languages decode the same golden protocol messages
     -> a second build preserves content identity and ranking
     -> Phase 3 Rust TUI receives and selects the intended stable ID
-    -> Phase 4 source record enters the same index, then a tombstone invalidates publication and the rebuilt corpus excludes it
+
+planned Stage 4:
+    -> reviewed source record enters the same index
+    -> explicit deletion invalidates publication
+    -> rebuilt corpus excludes the item and the stale worker stops
 ```
 
 ## Search request
@@ -235,14 +239,14 @@ active corpus                         checksummed manifest pointer       Phase 1
 TF-IDF/LSA experiment artifacts      NumPy matrices + ordered JSON IDs  Phase 2
 benchmark and reports                 versioned JSON/Markdown            Phase 2
 selection feedback                    optional local JSONL               Phase 3
-source plan/cursor/raw/report         versioned files in acquisition dir Phase 4
+source plan/cursor/raw/report         planned versioned acquisition files Stage 4
 ```
 
 Raw, canonical, and derived data are layers of one corpus, not three competing sources of truth. Derived FTS and embedding artifacts can be rebuilt. A model change produces a new manifest and never overwrites the artifacts attached to an earlier score.
 
-## Repository shape by phase
+## Repository shape
 
-The project keeps this single-package shape through Phase 4:
+The paused Phase 3 release keeps this single-package shape:
 
 ```text
 README.md
@@ -253,8 +257,7 @@ rust-toolchain.toml
 migrations/
     001_initial.sql
 src/
-    main.rs                  acquisition, ingest, TUI, feedback, and profile dispatch
-    commons.rs               one reviewed Commons acquisition path
+    main.rs                  ingest, TUI, feedback, and profile dispatch
     ingest.rs                local validation, storage, and outcomes
     protocol.rs              strict Rust NDJSON message types
     worker.rs                bounded Python process and response validation
@@ -274,9 +277,6 @@ benchmarks/
     provisional-v1.json
     reports/phase2-provisional.{json,md}
     reports/phase3-interface.json
-    reports/phase4-wikimedia.json
-examples/
-    wikimedia-commons-plan.json
 tests/
     fixtures/corpus/         cleared local manifest and assets
     fixtures/protocol/       cross-language golden messages
@@ -284,20 +284,19 @@ tests/
     test_phase1.py           offline Rust-to-Python acceptance check
     test_phase2.py           offline corpus-to-worker acceptance check
     test_phase3.py           offline PTY selection, feedback, failure, and profile
-    test_phase4.py           offline source-to-tombstone acceptance check
 data/                        ignored working and published artifacts
 ```
 
-Phase 4 adds one concrete source integration. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
+Stage 4 may add one concrete `commons.rs` source module, a reviewed plan example, one offline acceptance script, and one source report only when the complete stage closes. One Cargo package and one Python package remain enough; do not add a Cargo workspace, web service, message queue, vector service, generic adapter framework, or empty context package.
 
 ## Failure behavior
 
 | Failure | Required behavior |
 |---|---|
 | Invalid or rights-incomplete source item | Quarantine the item without losing the batch. |
-| Commons content, identity, dimension, or rights drift | Quarantine the new revision; tombstone a previously served revision until it is reviewed. |
-| Explicit Commons deletion or completed-plan removal | Emit a minimal tombstone, invalidate the active pointer after ingestion, then rebuild before serving. |
-| API omission, interruption, or exhausted transient failure | Preserve the cursor and prior availability; never infer a deletion. |
+| Planned Commons content, identity, dimension, or rights drift | Stage 4 must quarantine the new revision and remove a previously served revision until it is reviewed. |
+| Planned explicit Commons deletion or completed-plan removal | Stage 4 must record deletion, invalidate serving state, then rebuild before serving. |
+| Planned API omission, interruption, or exhausted transient failure | Stage 4 must preserve prior availability and never infer a deletion. |
 | Rust/Python schema mismatch | Stop the build or worker startup. |
 | Corrupt manifest or item/vector mismatch | Refuse publication or startup. |
 | Dense artifact missing or corrupt at startup | Reject the complete Phase 2 snapshot; lexical-only degradation is allowed only for a runtime dense-route failure after successful startup. |
@@ -305,7 +304,7 @@ Phase 4 adds one concrete source integration. One Cargo package and one Python p
 | Worker crash or timeout | Preserve terminal control, show an error, and allow an explicit restart. |
 | Unsupported terminal image protocol | Use the text/metadata preview and external-open action. |
 | No eligible match | Return an empty result list. |
-| Permission revocation or active-pointer change | Stop the open worker and serving snapshot until a replacement is built and the worker restarts. |
+| Future permission revocation or active-pointer change | Stage 4 must stop the open worker and serving snapshot until a replacement is built and the worker restarts. |
 
 ## Deferred boundary
 

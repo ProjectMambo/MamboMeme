@@ -27,7 +27,7 @@ cargo run --locked -- --help
 cargo run --locked -- --version
 ```
 
-Help and version return `0`. Invalid command syntax returns `2`; runtime, storage, worker, terminal, and acquisition failures return `1`.
+Help and version return `0`. Invalid command syntax returns `2`; runtime, storage, worker, and terminal failures return `1`.
 
 Build a fixture corpus and launch from the repository root:
 
@@ -136,7 +136,7 @@ The Rust application:
 6. sends `shutdown`, requires `bye`, waits for bounded process exit, and forcibly terminates on failure;
 7. restores the cursor, alternate screen, and raw mode on the tested success and fatal-worker paths before printing the selected ID or error.
 
-The worker's standard error is discarded by the Rust client so diagnostics cannot corrupt NDJSON standard output. Snapshot artifacts load and verify once per worker, while the small active pointer is rechecked before every search. A Phase 4 tombstone or serving-provenance change removes that pointer; publishing a replacement changes its identity. Either event makes the old worker fail closed and requires a restart after rebuilding. The application never spawns a process per query or retries forever.
+The worker's standard error is discarded by the Rust client so diagnostics cannot corrupt NDJSON standard output. Snapshot artifacts load and verify when the worker starts. The released Phase 3 application never spawns a process per query or retries forever. The paused Phase 4 stage must add fail-closed serving-state revalidation before remote deletion or rights-change handling can ship.
 
 ## Keyboard and accessibility
 

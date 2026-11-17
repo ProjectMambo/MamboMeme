@@ -1,7 +1,7 @@
 # MamboMeme
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Status-Phase_4_in_progress-d29922?style=flat-square" alt="Project status: Phase 4 in progress" />
+  <img src="https://img.shields.io/badge/Status-Paused-6f42c1?style=flat-square" alt="Project status: paused" />
   <a href="../LICENSE"><img src="https://img.shields.io/github/license/ProjectMambo/MamboMeme?style=flat-square&color=orange" alt="MIT License" /></a>
 </p>
 
@@ -22,7 +22,7 @@ The public fixture comparison did not satisfy the confidence rule, so lexical se
 
 ## Status
 
-Phases 1 through 3 are complete. Phase 4 is in progress and adds the reviewed Commons acquisition boundary without changing the search or TUI contracts. The repository contains the local corpus pipeline, weighted lexical search, a small LSA dense experiment, deterministic hybrid ranking, a strict long-lived NDJSON worker, the Rust TUI, optional private local feedback, a public provisional benchmark, and offline acceptance checks. Phase 4 is not complete until the commands and source report in [Testing](Testing.md) pass together.
+MamboMeme is paused after Phase 3. The repository contains the complete local corpus pipeline, weighted lexical search, a small LSA dense experiment, deterministic hybrid ranking, a strict long-lived NDJSON worker, the Rust TUI, optional private local feedback, a public provisional benchmark, and offline acceptance checks. Phase 4's reviewed Commons acquisition design is not released or active. The [Development plan](Development%20Plan.md) defines the resume gate.
 
 The Phase 3 interface profile records `11.377 ms` p95 submit-to-completed-result-state latency across 1,024 measured searches with zero request errors on one declared release-mode `80×24` PTY run. MMTS-Search-v1 still has a null score and `INCOMPLETE` status because the independent human-labelled hidden benchmark with its safety subset does not exist.
 
@@ -30,14 +30,14 @@ The Phase 3 interface profile records `11.377 ms` p95 submit-to-completed-result
 
 | Part | Status | Purpose |
 |---|---|---|
-| Data processing and storage | Phase 1 complete; Phase 4 in progress | Validate, deduplicate, and version local or reviewed source material while preserving provenance and rights evidence. |
+| Data processing and storage | Phase 1 complete; Phase 4 paused | Validate, deduplicate, and version local reviewed material while preserving provenance and rights evidence. |
 | Retrieval | Phase 2 complete | Search by exact wording, people, templates, tags, visual descriptions, or semantic concepts and return ranked matches. |
 | User interface | Phase 3 complete | Search, inspect, navigate, open, manually copy, and select results through a Rust terminal interface. |
 | Context-aware suggestions | Future | Convert one message or a short chat into search cues, then reuse the same retrieval engine. |
 
 ### Non-goals and current limits
 
-There is no general crawler, context assistant, public service API, packaged binary distribution, or deployment target. Phase 4 accepts only one finite, reviewed Wikimedia Commons page-ID plan. A graphical interface, image embeddings, and context-aware suggestions remain future work rather than current capability.
+There is no external source client, general crawler, context assistant, public service API, packaged binary distribution, or deployment target. The paused Phase 4 design permits only one finite, reviewed Wikimedia Commons page-ID plan when development resumes. A graphical interface, image embeddings, and context-aware suggestions remain future work rather than current capability.
 
 ### Selection feedback
 
@@ -86,22 +86,21 @@ Add `--feedback` to the `tui` command only when local interaction logging is wan
 |---|---|
 | Understand the components and Rust/Python boundaries | [Architecture](Architecture.md) |
 | Plan acquisition, parsing, enrichment, and storage | [Data pipeline](Data%20Pipeline.md) |
-| Review the real-source policy and failure boundary | [Wikimedia Commons source](Wikimedia%20Commons%20Source.md) |
+| Review the paused real-source design and failure boundary | [Wikimedia Commons source](Wikimedia%20Commons%20Source.md) |
 | Follow a query through ranking and selection | [Retrieval](Retrieval.md) |
 | Use and understand the Rust TUI | [Interface](Interface.md) |
 | See the complete correctness test matrix | [Testing](Testing.md) |
 | Understand metrics and the Technical Score | [Evaluation](Evaluation.md) |
-| Follow the implementation order | [Roadmap](Roadmap.md) |
+| Follow the implementation and resume order | [Development plan](Development%20Plan.md) |
 
 ## Project structure
 
 ```text
-src/                         Rust ingestion, source acquisition, CLI, and TUI
+src/                         Rust local ingestion, CLI, protocol, and TUI
 python/mambomeme_search/     Python indexing, retrieval, worker, and evaluation
 migrations/                  ordered SQLite schema
 benchmarks/                  versioned evaluation inputs and reports
-tests/                       unit, contract, integration, PTY, and phase checks
-examples/                    reviewed operator inputs such as the Commons plan
+tests/                       unit, contract, integration, PTY, and Phase 1–3 checks
 docs/                        synchronized project documentation
 ```
 
@@ -109,11 +108,11 @@ docs/                        synchronized project documentation
 PHASE 1  cleared local manifest -> Rust ingest -> SQLite -> Python FTS snapshot
 PHASE 2  query -> Python BM25 / measured dense experiment -> ranked results
 PHASE 3  Rust TUI -> long-lived Python worker -> preview and explicit selection
-PHASE 4  one approved external source -> the same corpus contract
+PAUSED   one approved external source -> the same corpus contract
 FUTURE   bounded chat context -> search cues -> the same retrieval contract
 ```
 
-The first three phases complete the local search product. Phase 4 is adding one deliberately narrow Wikimedia Commons integration: a finite human-reviewed page-ID plan, original-media download, hardened sequential requests, and explicit update/deletion replay through the existing corpus contract. Phase 2 implements the Python worker and shared newline-delimited JSON protocol; Phase 3 connects the Rust TUI client, terminal lifecycle, feedback log, and interface profiler.
+The first three phases complete the supported local search product. Phase 4 is paused before release; its design is one deliberately narrow Wikimedia Commons integration through the existing corpus contract. Phase 2 implements the Python worker and shared newline-delimited JSON protocol; Phase 3 connects the Rust TUI client, terminal lifecycle, feedback log, and interface profiler.
 
 ## Validation
 
@@ -127,11 +126,10 @@ PYTHONPATH=python python -m unittest discover -s tests/python
 python tests/test_phase1.py
 python tests/test_phase2.py
 PYTHONPATH=python python tests/test_phase3.py
-python tests/test_phase4.py
 git diff --check
 ```
 
-Phase 4 remains open until its controlled acquisition, update/deletion, enlarged-corpus regression, and source report pass together. The complete contract matrix and expected evidence live in [Testing](Testing.md).
+No Phase 4 test or source report is part of the paused baseline. Its controlled acquisition, update/deletion path, enlarged-corpus regression, source report, and documentation must pass together after an explicit resume. The complete contract matrix lives in [Testing](Testing.md).
 
 ## Development
 
@@ -142,7 +140,7 @@ cd ~/ProjectMambo/notes
 node Scripts/sync_docs.js --sync MamboMeme MamboWiki
 ```
 
-Keep provider contracts, their Rust/Python fixtures, and documentation in the same phase. Use Conventional Commits for coherent changes and do not present an in-progress phase as complete before its documented gate passes.
+Keep provider contracts, their Rust/Python fixtures, and documentation in the same stage. Use Conventional Commits for coherent changes and do not present a paused or incomplete stage as current behavior before its documented gate passes.
 
 ## License
 

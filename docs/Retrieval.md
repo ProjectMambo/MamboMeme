@@ -130,7 +130,7 @@ The worker response also includes `truncated`. When a 50-result response would e
 
 The Phase 3 TUI requests one cue, the default lexical route, and at most ten results. It validates the result envelope in Rust, shows a ranked list and metadata preview, and returns the explicitly selected stable ID as JSON after restoring the terminal.
 
-Phase 4 does not add another ranking path. A Commons record becomes an ordinary eligible corpus item only after reviewed acquisition, Rust ingestion, and a new Python snapshot publication. Before every search, an already-open engine rechecks `active.json` and requires the snapshot and dataset identities it loaded. Tombstone ingestion removes that pointer, while a later rebuild changes it; either condition fails the old worker closed so removed content cannot remain searchable through an open SQLite handle.
+The paused Phase 4 design does not add another ranking path. If resumed, a Commons record becomes an ordinary eligible corpus item only after reviewed acquisition, Rust ingestion, and a new Python snapshot publication. That stage must also make an already-open engine reject deleted or replaced serving state before it can return stale content. Per-query active-pointer revalidation and deletion records are planned acceptance requirements, not current Phase 3 behavior.
 
 ## Interaction feedback
 

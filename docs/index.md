@@ -16,7 +16,7 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 - Phase 1 builds a deterministic local SQLite/FTS corpus from a cleared fixture.
 - Phase 2 implements BM25, a measured LSA dense experiment, deterministic hybrid fusion, evaluation, and the worker. BM25 remains the default because fusion did not pass the confidence rule.
 - Phase 3 implements a Rust TUI connected to one long-lived Python retrieval worker through a versioned local protocol.
-- Phase 4 is adding one finite, human-reviewed Wikimedia Commons page-ID plan through the same corpus contract; it is not a general crawler.
+- Phase 4 is paused before release. Its design is one finite, human-reviewed Wikimedia Commons page-ID plan through the same corpus contract, not a general crawler.
 - Selection feedback is optional offline evidence, never live self-training.
 - Context-aware suggestions reuse retrieval only after the prompt-search product works.
 - MMTS-Search-v1, component metrics, and contract tests justify each implemented stage.
@@ -27,8 +27,8 @@ MamboMeme is a local ranked-search application for meme images and quotes. Rust 
 
 ## Validate and plan delivery
 
-::children{include=["[[Testing]]","[[Evaluation]]","[[Roadmap]]"] view="list" sort="order" direction="asc" show=["title","description"]}
+::children{include=["[[Testing]]","[[Evaluation]]","[[Development Plan]]"] view="list" sort="order" direction="asc" show=["title","description"]}
 
 ## Project status
 
-Phases 1 through 3 are complete. Phase 4's reviewed Commons source, tombstone replay, fail-closed snapshot invalidation, and controlled network tests are in progress. MMTS-Search-v1 remains unscored until an independent human-labelled hidden benchmark with its safety subset exists; no context assistant, public API, packaged distribution, or deployment target is implemented.
+MamboMeme is paused after the complete Phase 3 local source release. Phase 4's reviewed Commons source, deletion handling, stale-process protection, controlled network tests, and source report are designed but not released. MMTS-Search-v1 remains unscored until an independent human-labelled hidden benchmark with its safety subset exists; no context assistant, public API, packaged distribution, or deployment target is implemented.
